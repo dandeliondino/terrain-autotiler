@@ -1,0 +1,66 @@
+[gd_scene load_steps=6 format=3 uid="uid://dqu4t5eam22cg"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/terrains_panel_controls/autotiler_buttons.gd" id="1_ue58f"]
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/icon_button/icon_button.gd" id="2_xco70"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_tcpa7"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_4w4f7"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2syam"]
+
+[node name="AutotilerButtons" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ue58f")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="ErrorButton" type="Button" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/icon_normal_color = Color(0.580392, 0.580392, 0.580392, 1)
+theme_override_colors/icon_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/icon_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/focus = SubResource("StyleBoxEmpty_tcpa7")
+toggle_mode = true
+flat = true
+
+[node name="AutotilerButton" type="Button" parent="HBoxContainer"]
+unique_name_in_owner = true
+texture_filter = 2
+layout_mode = 2
+tooltip_text = "Toggle Terrain Autotiler terrains panel."
+theme_override_styles/focus = SubResource("StyleBoxEmpty_4w4f7")
+toggle_mode = true
+text = "Terrain Autotiler"
+flat = true
+
+[node name="UpdateButton" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Update all terrain tiles in current TileMap layer."
+flat = true
+icon_alignment = 1
+script = ExtResource("2_xco70")
+icon_name = "Reload"
+
+[node name="DebugSeparator" type="VSeparator" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DebugButton" type="Button" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Toggle debug panel."
+theme_override_styles/focus = SubResource("StyleBoxEmpty_2syam")
+toggle_mode = true
+flat = true
+script = ExtResource("2_xco70")
+icon_name = "Debug"
+
+[connection signal="pressed" from="HBoxContainer/UpdateButton" to="." method="_on_update_button_pressed"]
+[connection signal="toggled" from="HBoxContainer/DebugButton" to="." method="_on_debug_button_toggled"]

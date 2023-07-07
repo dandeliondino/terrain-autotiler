@@ -1,0 +1,134 @@
+[gd_scene load_steps=7 format=3 uid="uid://bmlp0rt0iek6k"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/terrains_panel_controls/terrains_panel.gd" id="1_pi1t8"]
+[ext_resource type="PackedScene" uid="uid://b3h0aluy47oyf" path="res://addons/terrain_autotiler/plugin/terrains_panel_controls/debug_panel.tscn" id="2_5mv5d"]
+[ext_resource type="PackedScene" uid="uid://dawomai8nhwu" path="res://addons/terrain_autotiler/plugin/terrains_panel_controls/paint_mode_buttons.tscn" id="3_mjq7u"]
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/icon_button/icon_button.gd" id="3_xtuml"]
+
+[sub_resource type="Image" id="Image_001fp"]
+data = {
+"data": PackedByteArray(255, 255, 255, 0, 255, 255, 255, 0, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 131, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 131, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 131, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 94, 94, 127, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 128, 128, 4, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 231, 255, 93, 93, 55, 255, 97, 97, 58, 255, 93, 93, 233, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 231, 255, 94, 94, 54, 255, 94, 94, 57, 255, 93, 93, 233, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 93, 93, 233, 255, 93, 93, 232, 255, 93, 93, 41, 255, 255, 255, 0, 255, 255, 255, 0, 255, 97, 97, 42, 255, 93, 93, 233, 255, 93, 93, 232, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 97, 97, 42, 255, 255, 255, 0, 255, 97, 97, 42, 255, 97, 97, 42, 255, 255, 255, 0, 255, 98, 98, 47, 255, 97, 97, 42, 255, 255, 255, 0, 255, 97, 97, 42, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 96, 96, 45, 255, 93, 93, 235, 255, 93, 93, 233, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 94, 94, 46, 255, 93, 93, 236, 255, 93, 93, 233, 255, 97, 97, 42, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 235, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 233, 255, 95, 95, 59, 255, 96, 96, 61, 255, 93, 93, 235, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 233, 255, 95, 95, 59, 255, 96, 96, 61, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 93, 93, 255, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 93, 93, 252, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255, 255, 0),
+"format": "RGBA8",
+"height": 16,
+"mipmaps": false,
+"width": 16
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_elgmq"]
+image = SubResource("Image_001fp")
+
+[node name="TerrainsPanel" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_pi1t8")
+
+[node name="HSplitContainer2" type="HSplitContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HSplitContainer" type="HSplitContainer" parent="HSplitContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HSplitContainer2/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HSplitContainer2/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TerrainSetsOptionButton" type="OptionButton" parent="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="HSplitContainer2/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="TerrainsList" type="ItemList" parent="HSplitContainer2/HSplitContainer/VBoxContainer/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+max_columns = 0
+same_column_width = true
+fixed_icon_size = Vector2i(72, 72)
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="HSplitContainer2/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="MinusButton" type="Button" parent="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+icon = SubResource("ImageTexture_elgmq")
+flat = true
+script = ExtResource("3_xtuml")
+icon_name = "ZoomLess"
+
+[node name="PlusButton" type="Button" parent="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+icon = SubResource("ImageTexture_elgmq")
+flat = true
+script = ExtResource("3_xtuml")
+icon_name = "ZoomMore"
+
+[node name="HideTerrainsCheckBox" type="CheckBox" parent="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Hide terrains without tiles"
+
+[node name="Control" type="Control" parent="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Control2" type="Control" parent="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="IconDisplayButton" type="Button" parent="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+icon = SubResource("ImageTexture_elgmq")
+flat = true
+script = ExtResource("3_xtuml")
+icon_name = "FileThumbnail"
+
+[node name="TextDisplayButton" type="Button" parent="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+icon = SubResource("ImageTexture_elgmq")
+flat = true
+script = ExtResource("3_xtuml")
+icon_name = "FileList"
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="HSplitContainer2/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PaintModeButtons" parent="HSplitContainer2/HSplitContainer/VBoxContainer2" instance=ExtResource("3_mjq7u")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DebugPanel" parent="HSplitContainer2" instance=ExtResource("2_5mv5d")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[connection signal="item_selected" from="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer/TerrainSetsOptionButton" to="." method="_on_terrain_sets_option_button_item_selected"]
+[connection signal="item_selected" from="HSplitContainer2/HSplitContainer/VBoxContainer/ScrollContainer/TerrainsList" to="." method="_on_terrains_list_item_selected"]
+[connection signal="pressed" from="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer2/MinusButton" to="." method="_on_minus_button_pressed"]
+[connection signal="pressed" from="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer2/PlusButton" to="." method="_on_plus_button_pressed"]
+[connection signal="toggled" from="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer2/HideTerrainsCheckBox" to="." method="_on_hide_terrains_check_box_toggled"]
+[connection signal="toggled" from="HSplitContainer2/HSplitContainer/VBoxContainer/HBoxContainer2/IconDisplayButton" to="." method="_on_icon_display_button_toggled"]

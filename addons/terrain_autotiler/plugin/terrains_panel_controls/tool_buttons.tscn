@@ -1,0 +1,123 @@
+[gd_scene load_steps=14 format=3 uid="uid://03m6g8ev8c2t"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/terrains_panel_controls/tool_buttons.gd" id="1_larp7"]
+[ext_resource type="ButtonGroup" uid="uid://dhjf85sclbpyi" path="res://addons/terrain_autotiler/plugin/terrains_panel_controls/tool_button_group.tres" id="2_lr8gd"]
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/icon_button/icon_button.gd" id="3_anjps"]
+
+[sub_resource type="InputEventKey" id="InputEventKey_nfqa4"]
+device = -1
+pressed = true
+keycode = 68
+unicode = 100
+
+[sub_resource type="Shortcut" id="Shortcut_5a4bf"]
+events = [SubResource("InputEventKey_nfqa4")]
+
+[sub_resource type="InputEventKey" id="InputEventKey_oktdd"]
+device = -1
+pressed = true
+keycode = 76
+unicode = 108
+
+[sub_resource type="Shortcut" id="Shortcut_4dm3k"]
+events = [SubResource("InputEventKey_oktdd")]
+
+[sub_resource type="InputEventKey" id="InputEventKey_fauxh"]
+device = -1
+pressed = true
+keycode = 82
+unicode = 114
+
+[sub_resource type="Shortcut" id="Shortcut_b4lkb"]
+events = [SubResource("InputEventKey_fauxh")]
+
+[sub_resource type="InputEventKey" id="InputEventKey_xcpjq"]
+device = -1
+pressed = true
+keycode = 66
+unicode = 98
+
+[sub_resource type="Shortcut" id="Shortcut_c7pv4"]
+events = [SubResource("InputEventKey_xcpjq")]
+
+[sub_resource type="InputEventKey" id="InputEventKey_q7uvd"]
+device = -1
+pressed = true
+keycode = 80
+unicode = 112
+
+[sub_resource type="Shortcut" id="Shortcut_p8ojt"]
+events = [SubResource("InputEventKey_q7uvd")]
+
+[node name="ToolButtons" type="HBoxContainer"]
+size_flags_horizontal = 3
+script = ExtResource("1_larp7")
+
+[node name="DrawButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Draw."
+toggle_mode = true
+button_group = ExtResource("2_lr8gd")
+shortcut = SubResource("Shortcut_5a4bf")
+flat = true
+script = ExtResource("3_anjps")
+icon_name = "Edit"
+
+[node name="LineButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Line."
+toggle_mode = true
+button_group = ExtResource("2_lr8gd")
+shortcut = SubResource("Shortcut_4dm3k")
+flat = true
+script = ExtResource("3_anjps")
+icon_name = "Line"
+
+[node name="RectButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Rectangle."
+toggle_mode = true
+button_group = ExtResource("2_lr8gd")
+shortcut = SubResource("Shortcut_b4lkb")
+flat = true
+script = ExtResource("3_anjps")
+icon_name = "Rectangle"
+
+[node name="BucketButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Bucket."
+toggle_mode = true
+button_group = ExtResource("2_lr8gd")
+shortcut = SubResource("Shortcut_c7pv4")
+flat = true
+script = ExtResource("3_anjps")
+icon_name = "Bucket"
+
+[node name="VSeparator" type="VSeparator" parent="."]
+layout_mode = 2
+
+[node name="PickerButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Terrain Picker."
+toggle_mode = true
+shortcut = SubResource("Shortcut_p8ojt")
+flat = true
+script = ExtResource("3_anjps")
+icon_name = "ColorPick"
+
+[node name="LockButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Lock or unlock cells."
+toggle_mode = true
+flat = true
+script = ExtResource("3_anjps")
+icon_name = "Lock"
+
+[connection signal="toggled" from="PickerButton" to="." method="_on_picker_button_toggled"]
+[connection signal="toggled" from="LockButton" to="." method="_on_lock_button_toggled"]

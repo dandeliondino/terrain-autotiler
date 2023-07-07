@@ -1,0 +1,107 @@
+[gd_scene load_steps=3 format=3 uid="uid://b3h0aluy47oyf"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/terrains_panel_controls/debug_panel.gd" id="1_nnu4a"]
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/icon_button/icon_button.gd" id="2_4vffg"]
+
+[node name="DebugPanel" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_nnu4a")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="TabBar" type="TabBar" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tab_count = 3
+tab_0/title = "Terrains"
+tab_1/title = "Last Update"
+tab_2/title = "Cell Logs"
+
+[node name="DebugOverlayButton" type="Button" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Toggle cell logging overlay."
+toggle_mode = true
+flat = true
+script = ExtResource("2_4vffg")
+icon_name = "Search"
+
+[node name="MenuButton" type="MenuButton" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+item_count = 3
+popup/item_0/text = "Enable cell logging"
+popup/item_0/checkable = 1
+popup/item_0/id = 0
+popup/item_1/text = ""
+popup/item_1/id = 2
+popup/item_1/separator = true
+popup/item_2/text = "Submit bug report"
+popup/item_2/id = 1
+script = ExtResource("2_4vffg")
+icon_name = "GuiTabMenu"
+
+[node name="LogPanel" type="PanelContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TerrainsContainer" type="ScrollContainer" parent="VBoxContainer/LogPanel"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TerrainsLabel" type="RichTextLabel" parent="VBoxContainer/LogPanel/TerrainsContainer"]
+unique_name_in_owner = true
+clip_contents = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 2
+selection_enabled = true
+
+[node name="ResultsContainer" type="ScrollContainer" parent="VBoxContainer/LogPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ResultsLabel" type="RichTextLabel" parent="VBoxContainer/LogPanel/ResultsContainer"]
+unique_name_in_owner = true
+clip_contents = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 2
+selection_enabled = true
+
+[node name="CellsContainer" type="ScrollContainer" parent="VBoxContainer/LogPanel"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CellLabel" type="RichTextLabel" parent="VBoxContainer/LogPanel/CellsContainer"]
+unique_name_in_owner = true
+clip_contents = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 2
+text = "Select the Debug Inspector tool and click on a TileMap cell to view detailed results."
+selection_enabled = true
+
+[connection signal="tab_changed" from="VBoxContainer/HBoxContainer/TabBar" to="." method="_on_tab_bar_tab_changed"]
+[connection signal="toggled" from="VBoxContainer/HBoxContainer/DebugOverlayButton" to="." method="_on_debug_overlay_button_toggled"]

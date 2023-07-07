@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=3 uid="uid://bpqwka5ntlgce"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/primary_peering_terrains_control/terrain_item.gd" id="1_67b7n"]
+
+[node name="TerrainItem" type="HBoxContainer"]
+script = ExtResource("1_67b7n")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ColorRect" type="ColorRect" parent="HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+
+[node name="Label" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "[0] TerrainName"
+
+[node name="OptionButton" type="OptionButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[connection signal="item_selected" from="OptionButton" to="." method="_on_option_button_item_selected"]

@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://2l7t03t7hh8b"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/primary_peering_terrains_control/primary_peering_terrains_control.gd" id="1_d1pum"]
+[ext_resource type="PackedScene" uid="uid://dkmdolef567aa" path="res://addons/terrain_autotiler/plugin/section_button/section_button.tscn" id="2_nfhyb"]
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/section_button/section_button.gd" id="3_fgka7"]
+[ext_resource type="PackedScene" uid="uid://bfhai5gwbca7l" path="res://addons/terrain_autotiler/plugin/doc_button/doc_button.tscn" id="3_um3fk"]
+
+[node name="PrimaryPeeringTerrainsControl" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_d1pum")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="SectionButton" parent="HBoxContainer" instance=ExtResource("2_nfhyb")]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("3_fgka7")
+label_text = "Primary Peering Terrains"
+expand_container_path = NodePath("../../MarginContainer")
+
+[node name="DocButton" parent="HBoxContainer" instance=ExtResource("3_um3fk")]
+layout_mode = 2
+disabled = false
+icon = null
+url = "https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features#primary-peering-terrains"
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+
+[node name="TerrainItemsContainer" type="VBoxContainer" parent="MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2

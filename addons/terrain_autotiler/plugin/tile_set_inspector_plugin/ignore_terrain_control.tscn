@@ -1,0 +1,36 @@
+[gd_scene load_steps=3 format=3 uid="uid://dllhpxri7auxj"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/ignore_terrain_control.gd" id="1_4vogp"]
+[ext_resource type="PackedScene" uid="uid://bfhai5gwbca7l" path="res://addons/terrain_autotiler/plugin/doc_button/doc_button.tscn" id="2_rufgv"]
+
+[node name="IgnoreTerrainControl" type="HBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+alignment = 1
+script = ExtResource("1_4vogp")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Button" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+text = "Add Ignore Terrain"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DocButton" parent="HBoxContainer" instance=ExtResource("2_rufgv")]
+layout_mode = 2
+disabled = false
+url = "https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features#ignore-terrain"
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

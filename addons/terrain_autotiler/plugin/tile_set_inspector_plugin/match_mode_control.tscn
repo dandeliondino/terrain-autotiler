@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3 uid="uid://cr0lv3xqirr2e"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/match_mode_control.gd" id="1_pdef2"]
+[ext_resource type="PackedScene" uid="uid://bfhai5gwbca7l" path="res://addons/terrain_autotiler/plugin/doc_button/doc_button.tscn" id="2_dqvhi"]
+
+[node name="MatchModeControl" type="HBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+script = ExtResource("1_pdef2")
+
+[node name="Spacer" type="Control" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="OptionButton" type="OptionButton" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DocButton" parent="HBoxContainer" instance=ExtResource("2_dqvhi")]
+layout_mode = 2
+disabled = false
+url = "https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features#full-corners-and-sides-match-mode"
+
+[connection signal="item_selected" from="HBoxContainer/OptionButton" to="." method="_on_option_button_item_selected"]

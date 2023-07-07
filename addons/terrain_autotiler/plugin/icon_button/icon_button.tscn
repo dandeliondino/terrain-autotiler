@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://d18shetevtsxb"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/icon_button/icon_button.gd" id="1_a6cym"]
+
+[node name="IconButton" type="Button"]
+flat = true
+icon_alignment = 1
+script = ExtResource("1_a6cym")

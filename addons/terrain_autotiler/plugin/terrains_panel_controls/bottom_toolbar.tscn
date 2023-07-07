@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=3 uid="uid://gmj88wigwpqt"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/terrains_panel_controls/bottom_toolbar.gd" id="1_5g3wc"]
+
+
+[node name="BottomToolbar" type="HBoxContainer"]
+script = ExtResource("1_5g3wc")
+
+[node name="DrawToolContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="DrawIcon" type="TextureRect" parent="DrawToolContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+stretch_mode = 3
+
+[node name="Label" type="Label" parent="DrawToolContainer"]
+layout_mode = 2
+text = "Size"
+
+[node name="OptionButton" type="OptionButton" parent="DrawToolContainer"]
+layout_mode = 2
+item_count = 1
+selected = 0
+popup/item_0/text = "1"
+popup/item_0/id = 0
+
+[node name="VSeparator" type="VSeparator" parent="."]
+layout_mode = 2
