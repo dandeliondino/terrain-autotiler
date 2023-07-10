@@ -875,6 +875,17 @@ func _assign_matching_pattern(p_coords : Vector2i, p_complex : bool) -> bool:
 
 	var matching_pattern_result := _get_matching_pattern(search_pattern, p_complex)
 	var pattern : TerrainPattern = matching_pattern_result["pattern"]
+
+	if not pattern:
+		if cell_logging:
+			result.add_cell_log(p_coords, "No pattern found.")
+		if search_pattern.can_match_to_empty && search_pattern.has_empty_neighbor():
+			if cell_logging:
+				result.add_cell_log(p_coords, "Simulating no match to empty...")
+			search_pattern = _create_search_pattern(p_coords, false, false)
+			matching_pattern_result = _get_matching_pattern(search_pattern, p_complex)
+			pattern = matching_pattern_result["pattern"]
+
 	if pattern:
 		_set_cell_pattern_and_update_search(p_coords, search_pattern, pattern)
 		if cell_logging:
@@ -990,6 +1001,8 @@ func _get_or_create_search_pattern(p_coords : Vector2i) -> SearchPattern:
 
 # p_use_terrain_for_locked_neighbors is only used for hypothetical testing
 # if match is possible
+# p_allow_match_to_empty is used to try to force cells to simulate empty match if they
+# only sometimes match to empty
 func _create_search_pattern(p_coords : Vector2i, p_no_pattern_for_locked_neighbors := false, p_allow_match_to_empty := true) -> SearchPattern:
 	# result.start_timer("_create_search_pattern()")
 	var coords := p_coords

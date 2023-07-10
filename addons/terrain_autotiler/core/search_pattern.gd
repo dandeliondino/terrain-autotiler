@@ -61,6 +61,13 @@ func create_from_pattern(p_pattern : TerrainPattern) -> SearchPattern:
 	return self
 
 
+func has_empty_neighbor() -> bool:
+	for neighbor_coords in _neighbor_terrains:
+		if _neighbor_terrains[neighbor_coords] == EMPTY_TERRAIN:
+			return true
+	return false
+
+
 # adds neighbor_coords and the relevant bits
 func add_neighbor(p_bit : TileSet.CellNeighbor, p_neighbor_coords : Vector2i, p_neighbor_bit : TileSet.CellNeighbor, p_neighbor_tile_terrain : int) -> void:
 	_bit_neighbor_bits[p_bit][p_neighbor_coords] = p_neighbor_bit
