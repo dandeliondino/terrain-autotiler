@@ -630,28 +630,15 @@ func _assign_complex_patterns(p_cells : Array[Vector2i], p_test_neighbor_complex
 	var next_cells := p_cells
 	while next_cells.size():
 		var coords : Vector2i = next_cells.pop_back()
-		if _non_matching_cells_set.has(coords):
-			continue
-		var search_pattern : SearchPattern = _get_or_create_search_pattern(coords)
-		if search_pattern.pattern:
+		if not _cell_needs_matching_pattern(coords):
 			continue
 
 		if cell_logging:
-			result.add_cell_log(coords, ["-- _assign_complex_patterns: update #%s --" % (result._current_update_index + 1), search_pattern])
+			result.add_cell_log(coords, ["_assign_complex_patterns()"])
 
-		var pattern : TerrainPattern
+		var success := _assign_matching_pattern(coords, true)
 
-		var top_pattern := search_pattern.get_top_pattern()
-		var pattern_type := result.PatternType.COMPLEX_BEST_PATTERN
-		if top_pattern:
-			pattern = terrains_data.get_pattern(top_pattern)
-			if pattern:
-				pattern_type = result.PatternType.COMPLEX_TOP_PATTERN
-		if not pattern:
-			var possible_patterns := terrains_data.find_patterns(search_pattern)
-			pattern = _get_max_score_pattern(search_pattern, possible_patterns, false)
-
-		if not pattern:
+		if not success:
 			var is_match_possible := _is_match_possible(coords)
 			if _expanded_update_available && is_match_possible:
 				# exit and restart with larger update area
@@ -663,16 +650,6 @@ func _assign_complex_patterns(p_cells : Array[Vector2i], p_test_neighbor_complex
 			else:
 				result.add_cell_error(coords, UpdateResult.CellError.NO_PATTERN_EXISTS)
 			continue
-
-		_set_cell_pattern_and_update_search(coords, search_pattern, pattern)
-
-		if cell_logging:
-			_log_assign_pattern(
-				coords,
-				pattern,
-				false,
-				pattern_type,
-			)
 
 		var neighbors_can_match := true
 		for neighbor_coords in _get_neighbors_needing_matches(coords):
@@ -816,14 +793,18 @@ func _move_unmatchable_neighbors_to_non_matching(p_coords : Vector2i) -> void:
 func _get_neighbors_needing_matches(p_coords : Vector2i) -> Array[Vector2i]:
 	var matchable_neighbors : Array[Vector2i] = []
 	for neighbor_coords in _cell_all_neighbor_coords[p_coords]:
-		if _non_matching_cells_set.has(neighbor_coords):
-			continue
-		if _cell_patterns.has(neighbor_coords):
+		if not _cell_needs_matching_pattern(neighbor_coords):
 			continue
 		matchable_neighbors.append(neighbor_coords)
 	return matchable_neighbors
 
 
+func _cell_needs_matching_pattern(p_coords : Vector2i) -> bool:
+	if _non_matching_cells_set.has(p_coords):
+		return false
+	if _cell_patterns.has(p_coords):
+		return false
+	return true
 
 
 
@@ -834,32 +815,15 @@ func _get_neighbors_needing_matches(p_coords : Vector2i) -> Array[Vector2i]:
 func _assign_simple_patterns(p_cells : Array[Vector2i]) -> bool:
 	while p_cells.size():
 		var coords : Vector2i = p_cells.pop_back()
-		if _non_matching_cells_set.has(coords):
-			continue
-		var search_pattern : SearchPattern = _get_or_create_search_pattern(coords)
-		if not search_pattern:
+		if not _cell_needs_matching_pattern(coords):
 			continue
 
 		if cell_logging:
-			result.add_cell_log(coords, ["-- _assign_simple_patterns: update #%s --" % (result._current_update_index + 1), search_pattern])
+			result.add_cell_log(coords, ["_assign_simple_patterns()"])
 
+		var success := _assign_matching_pattern(coords, false)
 
-		var pattern : TerrainPattern
-		var pattern_type := UpdateResult.PatternType.SIMPLE_BEST_PATTERN
-
-		var top_pattern := search_pattern.get_top_pattern()
-		if top_pattern:
-			pattern = terrains_data.get_pattern(top_pattern)
-			if pattern:
-				pattern_type = UpdateResult.PatternType.SIMPLE_TOP_PATTERN
-
-		if not pattern:
-			# result.start_timer("find_patterns")
-			var possible_patterns := terrains_data.find_patterns(search_pattern)
-			# result.stop_timer("find_patterns")
-			pattern = _get_max_score_pattern(search_pattern, possible_patterns, false)
-
-		if not pattern:
+		if not success:
 			var is_match_possible := _is_match_possible(coords)
 			if _expanded_update_available && is_match_possible:
 				# exit and restart with larger update area
@@ -871,16 +835,6 @@ func _assign_simple_patterns(p_cells : Array[Vector2i]) -> bool:
 			else:
 				result.add_cell_error(coords, UpdateResult.CellError.NO_PATTERN_EXISTS)
 			continue
-
-		_set_cell_pattern_and_update_search(coords, search_pattern, pattern)
-
-		if cell_logging:
-			_log_assign_pattern(
-				coords,
-				pattern,
-				false,
-				pattern_type,
-			)
 
 	return SUCCESS
 
@@ -912,6 +866,52 @@ func _assign_non_matching_patterns() -> void:
 # --------------------------
 # 	MATCH HELPER FUNCTIONS
 # --------------------------
+
+func _assign_matching_pattern(p_coords : Vector2i, p_complex : bool) -> bool:
+	var search_pattern : SearchPattern = _get_or_create_search_pattern(p_coords)
+
+	if cell_logging:
+		result.add_cell_log(p_coords, ["-- _assign_matching_pattern: update #%s --" % (result._current_update_index + 1), search_pattern])
+
+	var matching_pattern_result := _get_matching_pattern(search_pattern, p_complex)
+	var pattern : TerrainPattern = matching_pattern_result["pattern"]
+	if pattern:
+		_set_cell_pattern_and_update_search(p_coords, search_pattern, pattern)
+		if cell_logging:
+			_log_assign_pattern(
+				p_coords,
+				pattern,
+				false,
+				matching_pattern_result["pattern_type"],
+			)
+		return SUCCESS
+
+	return FAILED
+
+
+
+func _get_matching_pattern(p_search_pattern : SearchPattern, p_complex : bool) -> Dictionary:
+	var pattern : TerrainPattern
+
+	var top_pattern := p_search_pattern.get_top_pattern()
+	var pattern_type := UpdateResult.PatternType.SIMPLE_BEST_PATTERN
+	if p_complex:
+		pattern_type = UpdateResult.PatternType.COMPLEX_BEST_PATTERN
+
+	if top_pattern:
+		pattern = terrains_data.get_pattern(top_pattern)
+		if pattern:
+			if p_complex:
+				pattern_type = UpdateResult.PatternType.COMPLEX_TOP_PATTERN
+			else:
+				pattern_type = result.PatternType.SIMPLE_TOP_PATTERN
+
+	if not pattern:
+		var possible_patterns := terrains_data.find_patterns(p_search_pattern)
+		pattern = _get_max_score_pattern(p_search_pattern, possible_patterns, false)
+
+	return {"pattern_type": pattern_type, "pattern": pattern}
+
 
 func _get_max_score_pattern(p_search_pattern : SearchPattern, p_patterns : Array, p_allow_non_matching : bool) -> TerrainPattern:
 	# result.start_timer("_get_max_score_pattern()")
@@ -990,11 +990,11 @@ func _get_or_create_search_pattern(p_coords : Vector2i) -> SearchPattern:
 
 # p_use_terrain_for_locked_neighbors is only used for hypothetical testing
 # if match is possible
-func _create_search_pattern(p_coords : Vector2i, p_no_pattern_for_locked_neighbors := false) -> SearchPattern:
+func _create_search_pattern(p_coords : Vector2i, p_no_pattern_for_locked_neighbors := false, p_allow_match_to_empty := true) -> SearchPattern:
 	# result.start_timer("_create_search_pattern()")
 	var coords := p_coords
 	var tile_terrain : int = _cell_terrains[p_coords]
-	var search_pattern = SearchPattern.new(terrains_data, tile_terrain)
+	var search_pattern = SearchPattern.new(terrains_data, tile_terrain, p_allow_match_to_empty)
 	search_pattern.coords = coords
 
 	for bit in peering_bits:

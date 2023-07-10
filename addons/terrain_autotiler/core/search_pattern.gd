@@ -35,15 +35,18 @@ var can_match_to_empty := true
 var primary_peering_terrain := NULL_TERRAIN
 
 
-func _init(p_terrains_data : TerrainsData, p_tile_terrain : int) -> void:
+func _init(p_terrains_data : TerrainsData, p_tile_terrain : int, p_allow_match_to_empty := true) -> void:
 	terrains_data = p_terrains_data
 	_peering_bits = terrains_data.cn.get_peering_bits()
 	_ignore_terrain = terrains_data.ignore_terrain
 
 	tile_terrain = p_tile_terrain
 	primary_peering_terrain = terrains_data.get_primary_peering_terrain(tile_terrain)
-	can_match_to_empty = terrains_data.can_match_to_empty(tile_terrain)
 
+	if p_allow_match_to_empty:
+		can_match_to_empty = terrains_data.can_match_to_empty(tile_terrain)
+	else:
+		can_match_to_empty = false
 
 	for bit in _peering_bits:
 		_bit_neighbor_bits[bit] = {}
