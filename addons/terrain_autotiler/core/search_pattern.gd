@@ -35,15 +35,18 @@ var can_match_to_empty := true
 var primary_peering_terrain := NULL_TERRAIN
 
 
-func _init(p_terrains_data : TerrainsData, p_tile_terrain : int) -> void:
+func _init(p_terrains_data : TerrainsData, p_tile_terrain : int, p_allow_match_to_empty := true) -> void:
 	terrains_data = p_terrains_data
 	_peering_bits = terrains_data.cn.get_peering_bits()
 	_ignore_terrain = terrains_data.ignore_terrain
 
 	tile_terrain = p_tile_terrain
 	primary_peering_terrain = terrains_data.get_primary_peering_terrain(tile_terrain)
-	can_match_to_empty = terrains_data.can_match_to_empty(tile_terrain)
 
+	if p_allow_match_to_empty:
+		can_match_to_empty = terrains_data.can_match_to_empty(tile_terrain)
+	else:
+		can_match_to_empty = false
 
 	for bit in _peering_bits:
 		_bit_neighbor_bits[bit] = {}
@@ -56,6 +59,13 @@ func create_from_pattern(p_pattern : TerrainPattern) -> SearchPattern:
 	for bit in get_peering_bits():
 		set_bit_peering_terrain(bit, p_pattern.get_bit_peering_terrain(bit))
 	return self
+
+
+func has_empty_neighbor() -> bool:
+	for neighbor_coords in _neighbor_terrains:
+		if _neighbor_terrains[neighbor_coords] == EMPTY_TERRAIN:
+			return true
+	return false
 
 
 # adds neighbor_coords and the relevant bits
