@@ -60,6 +60,7 @@ func setup(p_context : Context) -> void:
 	context.current_debug_cell_changed.connect(_on_current_debug_cell_changed)
 	context.current_input_mode_changed.connect(_on_current_input_mode_changed)
 
+	visibility_changed.connect(_on_visibility_changed)
 
 	menu_popup.id_pressed.connect(_on_menu_popup_id_pressed)
 
@@ -89,6 +90,9 @@ func _update_terrains(p_terrain_set : int, p_show_transitions := false) -> void:
 	terrains_label.clear()
 	transitions_button.hide()
 
+	if not is_visible_in_tree():
+		return
+
 	if p_terrain_set == Autotiler.NULL_TERRAIN_SET:
 		return
 	var autotiler := context.get_current_autotiler()
@@ -117,6 +121,9 @@ func _on_transitions_button_pressed() -> void:
 func _update_results(p_update_result : UpdateResult) -> void:
 	results_label.clear()
 	_reset_cell_log()
+
+	if not is_visible_in_tree():
+		return
 
 	if not p_update_result:
 		tab_bar.set_tab_hidden(RESULTS, true)
@@ -173,10 +180,15 @@ func _reset_cell_log() -> void:
 	cell_label.append_text("Open the debug overlay by clicking the magnifying glass (above).\n\nThen select a cell to view its log.")
 
 
+func _on_visibility_changed() -> void:
+	_update_terrains(context.get_current_terrain_set())
+	_update_results(context.get_current_update_result())
+
 
 func _on_current_terrain_set_changed(p_terrain_set : int) -> void:
 #	prints("_on_current_terrain_set_changed", p_terrain_set)
 	_update_terrains(p_terrain_set)
+
 
 func _on_current_update_result_changed(p_update_result : UpdateResult) -> void:
 	_update_results(p_update_result)
