@@ -30,6 +30,8 @@ var context : Context
 @onready var results_container: ScrollContainer = %ResultsContainer
 @onready var cells_container: ScrollContainer = %CellsContainer
 
+@onready var transitions_button: Button = %TransitionsButton
+
 @onready var log_panel: Control = %LogPanel
 
 
@@ -58,6 +60,7 @@ func setup(p_context : Context) -> void:
 	context.current_debug_cell_changed.connect(_on_current_debug_cell_changed)
 	context.current_input_mode_changed.connect(_on_current_input_mode_changed)
 
+	visibility_changed.connect(_on_visibility_changed)
 
 	menu_popup.id_pressed.connect(_on_menu_popup_id_pressed)
 
@@ -78,10 +81,17 @@ func _show_tab(p_idx : int) -> void:
 			container.hide()
 
 
+# -------------------
+#	TERRAINS TAB
+# -------------------
 
-func _update_terrains(p_terrain_set : int) -> void:
+func _update_terrains(p_terrain_set : int, p_show_transitions := false) -> void:
 #	print("update_terrains called with %s" % p_terrain_set)
 	terrains_label.clear()
+	transitions_button.hide()
+
+	if not is_visible_in_tree():
+		return
 
 	if p_terrain_set == Autotiler.NULL_TERRAIN_SET:
 		return
@@ -94,8 +104,15 @@ func _update_terrains(p_terrain_set : int) -> void:
 	if not terrains_data:
 		return
 
-	terrains_label.append_text(terrains_data.get_debug_text())
+	if not p_show_transitions:
+		transitions_button.show()
 
+	terrains_label.append_text(terrains_data.get_debug_text(p_show_transitions))
+
+
+
+func _on_transitions_button_pressed() -> void:
+	_update_terrains(context.get_current_terrain_set(), true)
 
 
 
@@ -104,6 +121,9 @@ func _update_terrains(p_terrain_set : int) -> void:
 func _update_results(p_update_result : UpdateResult) -> void:
 	results_label.clear()
 	_reset_cell_log()
+
+	if not is_visible_in_tree():
+		return
 
 	if not p_update_result:
 		tab_bar.set_tab_hidden(RESULTS, true)
@@ -160,10 +180,15 @@ func _reset_cell_log() -> void:
 	cell_label.append_text("Open the debug overlay by clicking the magnifying glass (above).\n\nThen select a cell to view its log.")
 
 
+func _on_visibility_changed() -> void:
+	_update_terrains(context.get_current_terrain_set())
+	_update_results(context.get_current_update_result())
+
 
 func _on_current_terrain_set_changed(p_terrain_set : int) -> void:
 #	prints("_on_current_terrain_set_changed", p_terrain_set)
 	_update_terrains(p_terrain_set)
+
 
 func _on_current_update_result_changed(p_update_result : UpdateResult) -> void:
 	_update_results(p_update_result)
@@ -198,3 +223,6 @@ func _on_menu_popup_id_pressed(p_id : int) -> void:
 func _on_current_input_mode_changed(p_input_mode : Context.InputMode) -> void:
 	if p_input_mode != Context.InputMode.DEBUG:
 		debug_overlay_button.set_pressed_no_signal(false)
+
+
+
