@@ -62,7 +62,7 @@ var ignore_terrain_substitutes : PackedInt32Array
 
 var single_pattern_terrains : PackedInt32Array = []
 
-# var profiler := Profiler.new()
+#var profiler := Profiler.new()
 
 # ----------------------------------------------------
 #	SCORES
@@ -152,7 +152,7 @@ func _init(p_tile_set : TileSet, p_terrain_set : int) -> void:
 	# profiler.start_timer("_load_transitions()")
 	_load_transitions()
 	# profiler.stop_timer("_load_transitions()")
-	# profiler.print_timers()
+#	profiler.print_timers()
 
 
 # -----------------------------------------------
@@ -385,10 +385,13 @@ func _load_transitions() -> void:
 
 
 func _create_transition_scores_list(p_tile_terrains : Array) -> void:
-	# profiler.start_timer("_create_transition_scores_list()")
+
 	# profiler.start_timer("_get_transition_key()")
 	var transition_key := _get_transition_key(p_tile_terrains)
+	if _transition_peering_terrains.has(transition_key):
+		return
 	# profiler.stop_timer("_get_transition_key()")
+	# profiler.start_timer("_create_transition_scores_list()")
 	var peering_terrain_scores := {}
 
 	for peering_terrain in peering_terrains:
