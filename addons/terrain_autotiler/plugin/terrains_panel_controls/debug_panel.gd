@@ -30,6 +30,8 @@ var context : Context
 @onready var results_container: ScrollContainer = %ResultsContainer
 @onready var cells_container: ScrollContainer = %CellsContainer
 
+@onready var transitions_button: Button = %TransitionsButton
+
 @onready var log_panel: Control = %LogPanel
 
 
@@ -78,10 +80,14 @@ func _show_tab(p_idx : int) -> void:
 			container.hide()
 
 
+# -------------------
+#	TERRAINS TAB
+# -------------------
 
-func _update_terrains(p_terrain_set : int) -> void:
+func _update_terrains(p_terrain_set : int, p_show_transitions := false) -> void:
 #	print("update_terrains called with %s" % p_terrain_set)
 	terrains_label.clear()
+	transitions_button.hide()
 
 	if p_terrain_set == Autotiler.NULL_TERRAIN_SET:
 		return
@@ -94,8 +100,15 @@ func _update_terrains(p_terrain_set : int) -> void:
 	if not terrains_data:
 		return
 
-	terrains_label.append_text(terrains_data.get_debug_text())
+	if not p_show_transitions:
+		transitions_button.show()
 
+	terrains_label.append_text(terrains_data.get_debug_text(p_show_transitions))
+
+
+
+func _on_transitions_button_pressed() -> void:
+	_update_terrains(context.get_current_terrain_set(), true)
 
 
 
@@ -198,3 +211,6 @@ func _on_menu_popup_id_pressed(p_id : int) -> void:
 func _on_current_input_mode_changed(p_input_mode : Context.InputMode) -> void:
 	if p_input_mode != Context.InputMode.DEBUG:
 		debug_overlay_button.set_pressed_no_signal(false)
+
+
+

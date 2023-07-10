@@ -618,7 +618,7 @@ func get_primary_pattern(p_tile_terrain : int) -> TerrainPattern:
 #  DEBUG TEXT
 # -----------------------------------------------
 
-func get_debug_text() -> String:
+func get_debug_text(p_show_transitions : bool) -> String:
 	var text := "Terrain patterns cached: %s" % _patterns_by_id.size()
 	text += "\nTile terrains: %s + EMPTY" % tile_terrains.size()
 	text += "\nPeering terrains: %s" % peering_terrains.size()
@@ -631,7 +631,7 @@ func get_debug_text() -> String:
 	text += "\n"
 
 	for tile_terrain in tile_terrain_order:
-		text += _get_debug_tile_terrain_text(tile_terrain)
+		text += _get_debug_tile_terrain_text(tile_terrain, p_show_transitions)
 		text += "\n"
 
 
@@ -649,7 +649,7 @@ func _get_debug_tile_terrain_order() -> PackedInt32Array:
 	return PackedInt32Array(printed_tile_terrain_order)
 
 
-func _get_debug_tile_terrain_text(p_tile_terrain : int) -> String:
+func _get_debug_tile_terrain_text(p_tile_terrain : int, p_show_transitions : bool) -> String:
 	var text := ""
 
 	text += "\n"
@@ -682,27 +682,15 @@ func _get_debug_tile_terrain_text(p_tile_terrain : int) -> String:
 	text += "\n\t"
 	text += "\n\t".join(peering_terrain_texts)
 
-	text += "\n\nTransition peering terrain scores:"
-	var to_terrains := sorted_tile_terrains + [EMPTY_TERRAIN]
-	var a := p_tile_terrain
-	for b in to_terrains:
-		text += _get_debug_transition_texts([a, b])
+	if p_show_transitions:
+		text += "\n\nTransition peering terrain scores:"
+		var to_terrains := sorted_tile_terrains + [EMPTY_TERRAIN]
+		var a := p_tile_terrain
+		for b in to_terrains:
+			text += _get_debug_transition_texts([a, b])
 
-	for b in to_terrains:
-		for c in to_terrains:
-			var terrains_set := {}
-			terrains_set[a] = true
-			if terrains_set.has(b):
-				continue
-			terrains_set[b] = true
-			if terrains_set.has(c):
-				continue
-			terrains_set[c] = true
-			text += _get_debug_transition_texts(terrains_set.keys())
-
-	for b in to_terrains:
-		for c in to_terrains:
-			for d in to_terrains:
+		for b in to_terrains:
+			for c in to_terrains:
 				var terrains_set := {}
 				terrains_set[a] = true
 				if terrains_set.has(b):
@@ -711,13 +699,32 @@ func _get_debug_tile_terrain_text(p_tile_terrain : int) -> String:
 				if terrains_set.has(c):
 					continue
 				terrains_set[c] = true
-				if terrains_set.has(d):
-					continue
 				text += _get_debug_transition_texts(terrains_set.keys())
+
+		for b in to_terrains:
+			for c in to_terrains:
+				for d in to_terrains:
+					var terrains_set := {}
+					terrains_set[a] = true
+					if terrains_set.has(b):
+						continue
+					terrains_set[b] = true
+					if terrains_set.has(c):
+						continue
+					terrains_set[c] = true
+					if terrains_set.has(d):
+						continue
+					text += _get_debug_transition_texts(terrains_set.keys())
 
 	text += "\n"
 	text += _get_terrain_color_template(p_tile_terrain) % "************************************"
 	return text
+
+
+func get_debug_transitions_text() -> String:
+	return ""
+
+
 
 
 func _get_debug_transition_texts(p_terrains : Array) -> String:
