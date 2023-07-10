@@ -89,6 +89,8 @@ func _update_terrains_data() -> void:
 
 	Metadata.validate_metadata(_tile_map)
 
+#	var start_time := Time.get_ticks_msec()
+
 	_tile_set = _tile_map.tile_set
 	if not _tile_set:
 		return
@@ -98,6 +100,9 @@ func _update_terrains_data() -> void:
 
 	for terrain_set in _tile_set.get_terrain_sets_count():
 		_terrain_datas[terrain_set] = TerrainsData.new(_tile_set, terrain_set)
+
+#	var total_time := Time.get_ticks_msec() - start_time
+#	print("update terrains data - %s msec" % total_time)
 
 	terrains_data_updated.emit()
 
