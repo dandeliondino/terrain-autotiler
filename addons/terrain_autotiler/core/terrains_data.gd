@@ -152,7 +152,7 @@ func _init(p_tile_set : TileSet, p_terrain_set : int) -> void:
 	# profiler.start_timer("_load_transitions()")
 	_load_transitions()
 	# profiler.stop_timer("_load_transitions()")
-#	profiler.print_timers()
+	# profiler.print_timers()
 
 
 # -----------------------------------------------
@@ -389,6 +389,7 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 	# profiler.start_timer("_get_transition_key()")
 	var transition_key := _get_transition_key(p_tile_terrains)
 	if _transition_peering_terrains.has(transition_key):
+		# profiler.stop_timer("_get_transition_key()")
 		return
 	# profiler.stop_timer("_get_transition_key()")
 	# profiler.start_timer("_create_transition_scores_list()")
@@ -461,13 +462,15 @@ func get_transition_dict(p_tile_terrains : Array) -> Dictionary:
 	return _transition_peering_terrains.get(key, {})
 
 
-func _get_transition_key(p_tile_terrains : Array) -> StringName:
+# over 2x faster to use Array rather than StringName
+# slightly slower to use PackedInt32Array
+func _get_transition_key(p_tile_terrains : Array) -> Array:
 	var terrains_set := {}
 	for tile_terrain in p_tile_terrains:
 		terrains_set[tile_terrain] = true
 	var sorted_terrains := terrains_set.keys()
 	sorted_terrains.sort()
-	return ".%s." % ".".join(sorted_terrains)
+	return sorted_terrains
 
 
 func _has_peering_terrain(p_tile_terrain : int, p_peering_terrain : int) -> bool:
