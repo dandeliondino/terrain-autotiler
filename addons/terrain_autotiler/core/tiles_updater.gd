@@ -642,8 +642,11 @@ func _assign_complex_patterns(p_cells : Array[Vector2i], p_test_neighbor_complex
 		var pattern : TerrainPattern
 
 		var top_pattern := search_pattern.get_top_pattern()
+		var pattern_type := result.PatternType.COMPLEX_BEST_PATTERN
 		if top_pattern:
 			pattern = terrains_data.get_pattern(top_pattern)
+			if pattern:
+				pattern_type = result.PatternType.COMPLEX_TOP_PATTERN
 		if not pattern:
 			var possible_patterns := terrains_data.find_patterns(search_pattern)
 			pattern = _get_max_score_pattern(search_pattern, possible_patterns, false)
@@ -664,9 +667,6 @@ func _assign_complex_patterns(p_cells : Array[Vector2i], p_test_neighbor_complex
 		_set_cell_pattern_and_update_search(coords, search_pattern, pattern)
 
 		if cell_logging:
-			var pattern_type := result.PatternType.COMPLEX_BEST_PATTERN
-			if pattern == top_pattern:
-				pattern_type = result.PatternType.COMPLEX_TOP_PATTERN
 			_log_assign_pattern(
 				coords,
 				pattern,
@@ -711,7 +711,7 @@ func _assign_complex_patterns(p_cells : Array[Vector2i], p_test_neighbor_complex
 
 
 func _backtrack_at_coords(p_coords : Vector2i) -> Dictionary:
-	print("_backtrack_at_coords: %s" % p_coords)
+#	print("_backtrack_at_coords: %s" % p_coords)
 	var backtrack_result := {
 		"expanded_update_requested": false,
 		"neighbors_needing_new_patterns": [],
@@ -894,6 +894,8 @@ func _assign_simple_patterns(p_cells : Array[Vector2i]) -> bool:
 func _assign_non_matching_patterns() -> void:
 	for coords in _non_matching_cells_set:
 		var search_pattern := _get_or_create_search_pattern(coords)
+		if not search_pattern:
+			continue
 		var possible_patterns := terrains_data.get_patterns_by_terrain(search_pattern.tile_terrain)
 		var pattern := _get_max_score_pattern(search_pattern, possible_patterns, true)
 		_set_cell_pattern_and_update_search(coords, search_pattern, pattern)
@@ -913,11 +915,22 @@ func _assign_non_matching_patterns() -> void:
 
 func _get_max_score_pattern(p_search_pattern : SearchPattern, p_patterns : Array, p_allow_non_matching : bool) -> TerrainPattern:
 	# result.start_timer("_get_max_score_pattern()")
+	if cell_logging:
+		result.add_cell_log(p_search_pattern.coords, "get max score pattern:")
 	var max_score := -1000000
 	var max_score_pattern : TerrainPattern
 
 	for pattern in p_patterns:
 		var score := p_search_pattern.get_match_score(pattern, p_allow_non_matching)
+		if cell_logging:
+			result.add_cell_log(
+				p_search_pattern.coords,
+				[
+					"score = %s" % score,
+					pattern,
+					"------",
+				]
+			)
 		if score > max_score:
 			max_score = score
 			max_score_pattern = pattern
@@ -982,6 +995,7 @@ func _create_search_pattern(p_coords : Vector2i, p_no_pattern_for_locked_neighbo
 	var coords := p_coords
 	var tile_terrain : int = _cell_terrains[p_coords]
 	var search_pattern = SearchPattern.new(terrains_data, tile_terrain)
+	search_pattern.coords = coords
 
 	for bit in peering_bits:
 		for neighbor in cn.get_peering_bit_cell_neighbors(bit):
@@ -1032,7 +1046,7 @@ func _update_map() -> void:
 			old_pattern = terrains_data.empty_pattern
 		else:
 			var tile_data_pattern := TerrainPattern.new(cn.get_peering_bits()).create_from_tile_data(tile_data)
-			old_pattern = terrains_data.get_pattern(tile_data_pattern)
+			old_pattern = terrains_data.get_pattern(tile_data_pattern, true)
 		if old_pattern == pattern:
 			continue
 

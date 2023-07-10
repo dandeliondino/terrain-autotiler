@@ -107,12 +107,10 @@ enum Score {
 const ScoreValues := {
 	Score.PRIMARY : 300,
 	Score.PRIMARY_LOW : 250,
-	Score.IGNORE : 201,
-		# this puts ignore terrain below base terrain
-		# but above all others (as they can only get lower with the priority modifier)
+	Score.IGNORE : 150,
 	Score.HIGH : 200,
 	Score.LOW : 100,
-	Score.MATCHING_BIT : 400,
+	Score.MATCHING_BIT : 300,
 	Score.NON_MATCHING_BIT : -10000,
 }
 
@@ -387,11 +385,8 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 
 		for tile_terrain in p_tile_terrains:
 			if not _has_peering_terrain(tile_terrain, peering_terrain):
-				if _has_peering_terrain(tile_terrain, ignore_terrain):
-					ignore = true
-				else:
-					missing = true
-					break
+				missing = true
+				break
 			elif get_primary_peering_terrain(tile_terrain) == peering_terrain:
 				primary = true
 			elif _get_peering_terrain_pattern_count(tile_terrain, peering_terrain) < cn.get_full_set_pattern_count():
@@ -405,6 +400,10 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 		if priority_score == NOT_FOUND:
 			continue
 
+
+#		if ignore:
+#			peering_terrain_scores[peering_terrain] = \
+#				ScoreValues[Score.IGNORE] - priority_score
 		if low_count:
 			if primary:
 				peering_terrain_scores[peering_terrain] = \
@@ -412,15 +411,17 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 			else:
 				peering_terrain_scores[peering_terrain] = \
 					ScoreValues[Score.LOW] - priority_score
-		elif ignore:
-			peering_terrain_scores[peering_terrain] = \
-				ScoreValues[Score.IGNORE] - priority_score
 		elif primary:
 			peering_terrain_scores[peering_terrain] = \
 				ScoreValues[Score.PRIMARY] - priority_score
 		else:
 			peering_terrain_scores[peering_terrain] = \
 				ScoreValues[Score.HIGH] - priority_score
+
+	for tile_terrain in p_tile_terrains:
+		if _has_peering_terrain(tile_terrain, ignore_terrain):
+			peering_terrain_scores[ignore_terrain] = \
+				ScoreValues[Score.IGNORE]
 
 	var sorted_peering_terrains := peering_terrain_scores.keys()
 	sorted_peering_terrains.sort_custom(
@@ -474,8 +475,8 @@ func _get_peering_terrain_pattern_count(p_tile_terrain : int, p_peering_terrain 
 # get_pattern() - 3msec per 1000 calls
 # get_pattern_by_id() - 11msec per 1000 calls
 # (may be partly due to creating IDs, but that part can't be skipped)
-func get_pattern(p_pattern : TerrainPattern) -> TerrainPattern:
-	if has_ignore_terrain(p_pattern.tile_terrain):
+func get_pattern(p_pattern : TerrainPattern, p_constrain_ignore_terrain := false) -> TerrainPattern:
+	if has_ignore_terrain(p_pattern.tile_terrain) && not p_constrain_ignore_terrain:
 		return _get_pattern_with_ignore_terrain(p_pattern)
 
 	var dict : Dictionary = _pattern_lookup.get(p_pattern.tile_terrain, {})
