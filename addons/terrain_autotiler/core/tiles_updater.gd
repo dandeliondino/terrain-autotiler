@@ -417,6 +417,8 @@ func _assign_patterns(p_cells : Array[Vector2i]) -> bool:
 
 	if cells_to_update.is_empty():
 		for coords in next_cells:
+			if not _cell_needs_pattern(coords):
+				continue
 			var search_pattern := _get_or_create_search_pattern(coords)
 			var unique_peering_terrains_count := search_pattern.get_unique_peering_terrains().size()
 			var tile_terrain := search_pattern.tile_terrain
@@ -630,52 +632,67 @@ func _assign_complex_patterns(p_cells : Array[Vector2i], p_test_neighbor_complex
 	var next_cells := p_cells
 	while next_cells.size():
 		var coords : Vector2i = next_cells.pop_back()
-		if not _cell_needs_matching_pattern(coords):
+		if not _cell_needs_pattern(coords):
 			continue
 
 		if cell_logging:
 			result.add_cell_log(coords, ["_assign_complex_patterns()"])
 
 		var success := _assign_matching_pattern(coords, true)
+		var neighbors_verified := false
 
 		if not success:
 			var is_match_possible := _is_match_possible(coords)
-			if _expanded_update_available && is_match_possible:
-				# exit and restart with larger update area
-				result.add_cell_warning(coords, UpdateResult.CellError.NO_PATTERN_FOUND)
-				return EXPANDED_UPDATE_REQUESTED
-			_non_matching_cells_set[coords] = true
 			if is_match_possible:
-				result.add_cell_error(coords, UpdateResult.CellError.NO_PATTERN_FOUND)
-			else:
-				result.add_cell_error(coords, UpdateResult.CellError.NO_PATTERN_EXISTS)
-			continue
-
-		var neighbors_can_match := true
-		for neighbor_coords in _get_neighbors_needing_matches(coords):
-			if cell_logging:
-				result.add_cell_log(coords, "Evaluating neighbor for possible matches: %s" % neighbor_coords)
-			var neighbor_search_pattern := _create_search_pattern(neighbor_coords)
-			var neighbor_possible_patterns := terrains_data.find_patterns(neighbor_search_pattern)
-			if cell_logging:
-				result.add_cell_log(neighbor_coords, "complex neighbor: possible patterns = %s" % neighbor_possible_patterns.size())
-			if neighbor_possible_patterns.is_empty():
-				if not _is_match_possible(neighbor_coords):
-					_non_matching_cells_set[neighbor_coords] = true
+				var backtrack_result := _backtrack_at_coords(coords)
+				if backtrack_result["success"] == false:
+					if backtrack_result["expanded_update_requested"] == true:
+						result.add_cell_warning(coords, UpdateResult.CellError.NO_PATTERN_FOUND)
+						return EXPANDED_UPDATE_REQUESTED
+					# re-add the neighbors patterns we just cleared
+					# but don't bother checking or adding other neighbors
+					# if coords does not have a pattern assigned
+					next_cells.append_array(backtrack_result["neighbors_needing_new_patterns"])
+					result.add_cell_error(coords, UpdateResult.CellError.NO_PATTERN_FOUND)
 					continue
-				neighbors_can_match = false
+				# else - continue onward; if we've already backtracked, we know neighbors can match
+				# (or we've given up on them)
+				neighbors_verified = true
+			else:
+				# don't check or add neighbors
+				_non_matching_cells_set[coords] = true
+				result.add_cell_error(coords, UpdateResult.CellError.NO_PATTERN_EXISTS)
+				continue
 
-		if not neighbors_can_match:
-			var backtrack_result := _backtrack_at_coords(coords)
-			if backtrack_result["expanded_update_requested"] == true:
-				return EXPANDED_UPDATE_REQUESTED
-			next_cells.append_array(backtrack_result["neighbors_needing_new_patterns"])
+		if not neighbors_verified:
+			# TODO: this should be a separate function
+			var neighbors_can_match := true
+			for neighbor_coords in _get_neighbors_needing_matches(coords):
+				if cell_logging:
+					result.add_cell_log(coords, "Evaluating neighbor for possible matches: %s" % neighbor_coords)
+				var neighbor_search_pattern := _create_search_pattern(neighbor_coords)
+				var neighbor_possible_patterns := terrains_data.find_patterns(neighbor_search_pattern)
+				if cell_logging:
+					result.add_cell_log(neighbor_coords, "complex neighbor: possible patterns = %s" % neighbor_possible_patterns.size())
+				if neighbor_possible_patterns.is_empty():
+					if not _is_match_possible(neighbor_coords):
+						_non_matching_cells_set[neighbor_coords] = true
+						continue
+					neighbors_can_match = false
+
+			if not neighbors_can_match:
+				var backtrack_result := _backtrack_at_coords(coords)
+				if backtrack_result["expanded_update_requested"] == true:
+					return EXPANDED_UPDATE_REQUESTED
+				next_cells.append_array(backtrack_result["neighbors_needing_new_patterns"])
 
 		if not p_test_neighbor_complexity:
 			continue
 
 		for neighbor_coords in _get_neighbors_needing_matches(coords):
 			if next_cells.has(neighbor_coords):
+				continue
+			if not _cell_needs_pattern(neighbor_coords):
 				continue
 			var neighbor_search_pattern := _get_or_create_search_pattern(neighbor_coords)
 			if not neighbor_search_pattern:
@@ -692,6 +709,7 @@ func _backtrack_at_coords(p_coords : Vector2i) -> Dictionary:
 	var backtrack_result := {
 		"expanded_update_requested": false,
 		"neighbors_needing_new_patterns": [],
+		"success": true,
 	}
 
 	if cell_logging:
@@ -703,6 +721,18 @@ func _backtrack_at_coords(p_coords : Vector2i) -> Dictionary:
 	# it will not be needed for these coords anymore
 	var search_pattern := _create_search_pattern(p_coords)
 	var possible_patterns := terrains_data.find_patterns(search_pattern)
+	if possible_patterns.size() == 0:
+		backtrack_result["success"] = false
+		if cell_logging:
+			result.add_cell_log(p_coords, "unable to find pattern for p_coords")
+		if _expanded_update_available:
+			# already checked to see that coords can match
+			backtrack_result["expanded_update_requested"] = true
+		else:
+			_non_matching_cells_set[p_coords] = true
+			backtrack_result["neighbors_needing_new_patterns"] = neighbors_needing_new_patterns
+		return backtrack_result
+
 	var highest_score_pattern := _get_max_score_pattern(search_pattern, possible_patterns, false)
 	var next_pattern := highest_score_pattern
 
@@ -746,6 +776,7 @@ func _backtrack_at_coords(p_coords : Vector2i) -> Dictionary:
 
 		possible_patterns.erase(next_pattern)
 		if possible_patterns.is_empty():
+			backtrack_result["success"] = false
 			if _expanded_update_available:
 				backtrack_result["expanded_update_requested"] = true
 				return backtrack_result
@@ -793,16 +824,18 @@ func _move_unmatchable_neighbors_to_non_matching(p_coords : Vector2i) -> void:
 func _get_neighbors_needing_matches(p_coords : Vector2i) -> Array[Vector2i]:
 	var matchable_neighbors : Array[Vector2i] = []
 	for neighbor_coords in _cell_all_neighbor_coords[p_coords]:
-		if not _cell_needs_matching_pattern(neighbor_coords):
+		if not _cell_needs_pattern(neighbor_coords):
 			continue
 		matchable_neighbors.append(neighbor_coords)
 	return matchable_neighbors
 
 
-func _cell_needs_matching_pattern(p_coords : Vector2i) -> bool:
-	if _non_matching_cells_set.has(p_coords):
+func _cell_needs_pattern(p_coords : Vector2i, p_exclude_non_matching := true) -> bool:
+	if p_exclude_non_matching && _non_matching_cells_set.has(p_coords):
 		return false
 	if _cell_patterns.has(p_coords):
+		return false
+	if _cell_terrains[p_coords] == EMPTY_TERRAIN:
 		return false
 	return true
 
@@ -815,7 +848,7 @@ func _cell_needs_matching_pattern(p_coords : Vector2i) -> bool:
 func _assign_simple_patterns(p_cells : Array[Vector2i]) -> bool:
 	while p_cells.size():
 		var coords : Vector2i = p_cells.pop_back()
-		if not _cell_needs_matching_pattern(coords):
+		if not _cell_needs_pattern(coords):
 			continue
 
 		if cell_logging:
@@ -847,9 +880,9 @@ func _assign_simple_patterns(p_cells : Array[Vector2i]) -> bool:
 
 func _assign_non_matching_patterns() -> void:
 	for coords in _non_matching_cells_set:
-		var search_pattern := _get_or_create_search_pattern(coords)
-		if not search_pattern:
+		if not _cell_needs_pattern(coords, false):
 			continue
+		var search_pattern := _get_or_create_search_pattern(coords)
 		var possible_patterns := terrains_data.get_patterns_by_terrain(search_pattern.tile_terrain)
 		var pattern := _get_max_score_pattern(search_pattern, possible_patterns, true)
 		_set_cell_pattern_and_update_search(coords, search_pattern, pattern)
@@ -868,6 +901,7 @@ func _assign_non_matching_patterns() -> void:
 # --------------------------
 
 func _assign_matching_pattern(p_coords : Vector2i, p_complex : bool) -> bool:
+	# have already checked to ensure that needs a matching pattern
 	var search_pattern : SearchPattern = _get_or_create_search_pattern(p_coords)
 
 	if cell_logging:
@@ -982,13 +1016,6 @@ func _get_or_create_search_pattern(p_coords : Vector2i) -> SearchPattern:
 	# result.start_timer("_get_or_create_search_pattern()")
 	var search_pattern : SearchPattern = _cell_search_patterns.get(p_coords, null)
 	if not search_pattern:
-		if _cell_patterns.has(p_coords):
-			# don't make a search pattern if we sent an updated cell
-			# or a locked neighbor here
-			# result.stop_timer("_get_or_create_search_pattern()")
-			return null
-		if _cell_terrains[p_coords] == EMPTY_TERRAIN:
-			return null
 		search_pattern = _create_search_pattern(p_coords)
 		_cell_search_patterns[p_coords] = search_pattern
 	# result.stop_timer("_get_or_create_search_pattern()")
