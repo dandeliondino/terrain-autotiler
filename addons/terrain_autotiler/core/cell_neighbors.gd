@@ -1,3 +1,4 @@
+@tool
 extends Object
 
 const DEFAULT_OFFSET_AXIS := TileSet.TILE_OFFSET_AXIS_HORIZONTAL
