@@ -21,6 +21,7 @@ var tile_set_inspector_plugin := TileSetInspectorPlugin.new()
 # -----------------------------------
 
 func _enter_tree() -> void:
+	print("\n\n----------\n_enter_tree()")
 	context.editor_interface = get_editor_interface()
 
 	# update overlays to remove drawing of current cell
@@ -72,11 +73,11 @@ func _get_window_layout(configuration: ConfigFile) -> void:
 
 func _handles(object: Object) -> bool:
 	if not object is TileMap and not object is TileSet:
-#		print("_handles(): not object is TileMap - %s" % object)
+		print("_handles(): not object is TileMap - %s" % object)
 		context.set_current_tile_map(null)
 		return false
 
-#	print("_handles(): object is TileMap or TileSet - %s" % object)
+	print("_handles(): object is TileMap or TileSet - %s" % object)
 	if object is TileMap:
 		context.set_current_tile_map(object)
 	elif object is TileSet:
@@ -177,21 +178,25 @@ func populate_editor_references() -> void:
 	context.ed_terrain_tab_idx = context.ed_tab_bar.tab_count - 1
 	context.ed_tab_bar.tab_changed.connect(_on_ed_tab_changed)
 
+	context.ed_no_tileset_label = ed_tile_map_editor.find_children("*", "Label", false, false)[0]
+
 	ed_canvas_item_editor_viewport = get_editor_interface().get_base_control().find_children("*", "CanvasItemEditorViewport", true, false)[0]
 
 
-
 func _on_ed_tab_changed(_tab : int) -> void:
+	print("\n\n_on_ed_tab_changed()")
 	update_terrain_tab()
 
 
 func _on_ed_terrains_panel_visibility_changed() -> void:
+#	print("_on_ed_terrains_panel_visibility_changed()")
 	if not replace_terrain_gui:
 		return
 	if not ed_terrains_panel.is_visible_in_tree():
 		return
 	ed_terrains_panel.visible = false
-	terrains_panel.update_display()
+#	print("_on_ed_terrains_panel_visibility_changed() -> update_panel_display()")
+	terrains_panel.update_panel_display()
 
 
 # re-open current tile map to trigger _handles()
@@ -262,7 +267,7 @@ func add_terrains_controls() -> void:
 	terrains_panel.setup(context)
 	terrains_panel.visible = false
 	terrains_panel.visibility_changed.connect(context.emit_signal.bind("overlay_update_requested"))
-	terrains_panel.visibility_changed.connect(update_terrain_tab)
+#	terrains_panel.visibility_changed.connect(update_terrain_tab)
 
 	terrains_panel.add_child(viewport_input)
 	viewport_input.setup(context, ed_canvas_item_editor_viewport)
@@ -283,7 +288,7 @@ func remove_terrains_controls() -> void:
 
 
 func update_terrain_tab() -> void:
-#	print("update_terrain_tab")
+	print("update_terrain_tab")
 	if context.is_terrain_tab_active():
 #		print("update_terrain_tab: active")
 		autotiler_buttons.visible = true
@@ -292,7 +297,7 @@ func update_terrain_tab() -> void:
 			info_label.visible = true
 			ed_terrains_panel.visible = false
 			toggle_editor_buttons(false)
-			terrains_panel.update_display()
+#			terrains_panel.update_panel_display()
 	else:
 #		print("update_terrain_tab: inactive")
 		autotiler_buttons.visible = false
@@ -305,6 +310,8 @@ func update_terrain_tab() -> void:
 func replace_editor_terrain_gui() -> void:
 	ed_terrains_panel.visible = false
 	update_terrain_tab()
+	print("replace_editor_terrain_gui() -> terrains_panel.update_panel_display()")
+	terrains_panel.update_panel_display()
 
 
 func restore_editor_terrain_gui() -> void:
