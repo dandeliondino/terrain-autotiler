@@ -45,16 +45,19 @@ func set_current_tile_map(p_tile_map : TileMap) -> void:
 	if is_instance_valid(_current_tile_map) && _current_tile_map.changed.is_connected(_update_current_tile_set):
 		_current_tile_map.changed.disconnect(_update_current_tile_set)
 
+
 	_current_tile_map = p_tile_map
+#	print("context :: _current_tile_map -> %s" % p_tile_map)
+
 	clear_current_terrain_set()
 	clear_current_terrain()
-#	print("context :: _current_tile_map -> %s" % p_tile_map)
+	_clear_current_autotiler()
 	_update_current_tile_set()
-	current_tile_map_changed.emit(_current_tile_map)
-	overlay_update_requested.emit()
-
 	if is_instance_valid(_current_tile_map) && not _current_tile_map.changed.is_connected(_update_current_tile_set):
 		_current_tile_map.changed.connect(_update_current_tile_set)
+
+	current_tile_map_changed.emit(_current_tile_map)
+	overlay_update_requested.emit()
 
 
 func _update_current_tile_set() -> void:
@@ -64,7 +67,6 @@ func _update_current_tile_set() -> void:
 		_current_tile_set = null
 	else:
 		_current_tile_set = _current_tile_map.tile_set
-	_update_current_autotiler()
 	clear_current_terrains_data()
 	current_tile_set_changed.emit(_current_tile_set)
 
@@ -72,58 +74,38 @@ func _update_current_tile_set() -> void:
 func get_current_tile_map() -> TileMap:
 	return _current_tile_map
 
+func get_current_tile_set() -> TileSet:
+	return _current_tile_set
+
 
 # ----------------------------------------------
-# AUTOTILERS / TERRAIN DATAS
+# 	CURRENT AUTOTILER
 # ----------------------------------------------
-
-# signal not specific to terrain set
-signal terrains_data_updated
-
-var _autotilers := {} # {tile_map : autotiler}
 
 var _current_autotiler : Autotiler
 
-
-func _update_current_autotiler() -> void:
-	if _current_autotiler:
-#		print("previous autotiler: %s (tilemap %s)" % [_current_autotiler, _current_autotiler._tile_map])
-		if _current_autotiler.terrains_data_updated.is_connected(_on_terrains_data_updated):
-			_current_autotiler.terrains_data_updated.disconnect(_on_terrains_data_updated)
-		_current_autotiler.set_defer_terrains_data_updates(true)
-
-	if not _current_tile_map:
-		_current_autotiler = null
-		return
-
-	if not _current_tile_map.tile_set:
-		_current_autotiler = null
-		# in case tileset has been deleted
-		_autotilers[_current_tile_map] = null
-		return
-
-	_current_autotiler = _autotilers.get(get_current_tile_map(), null)
-	if not _current_autotiler:
-		_current_autotiler = Autotiler.new(get_current_tile_map())
-		_autotilers[get_current_tile_map()] = _current_autotiler
-
-	_current_autotiler.set_defer_terrains_data_updates(false)
-	if not _current_autotiler.terrains_data_updated.is_connected(_on_terrains_data_updated):
-		_current_autotiler.terrains_data_updated.connect(_on_terrains_data_updated)
-
+# called by terrains data panel
+func update_current_autotiler() -> void:
 	clear_current_terrains_data()
 	clear_current_update_result()
 
-#	print("new autotiler: %s (tilemap %s)" % [_current_autotiler, _current_autotiler._tile_map])
+	if not _current_tile_map or not _current_tile_map.tile_set:
+		_current_autotiler = null
+	else:
+		_current_autotiler = Autotiler.new(_current_tile_map)
+	print("update_current_autotiler() -> %s" % _current_autotiler)
+
+
+func _clear_current_autotiler() -> void:
+	print("_clear_current_autotiler()")
+	_current_autotiler = null
+	clear_current_terrains_data()
+	clear_current_update_result()
 
 
 func get_current_autotiler() -> Autotiler:
 	return _current_autotiler
 
-
-func _on_terrains_data_updated() -> void:
-#	print("_on_terrains_data_updated()")
-	terrains_data_updated.emit()
 
 
 
@@ -224,13 +206,19 @@ var _current_terrains_data : TerrainsData = null
 
 
 func set_current_terrain_set(p_terrain_set : int) -> void:
+	print("set_current_terrain_set() - %s" % p_terrain_set)
 	if p_terrain_set == _current_terrain_set:
+		print("p_terrain_set == _current_terrain_set, returning")
 		return
 	_current_terrain_set = p_terrain_set
-	if _current_terrain_set == Autotiler.NULL_TERRAIN_SET or not get_current_autotiler():
+	if _current_terrain_set == Autotiler.NULL_TERRAIN_SET:
+		_current_terrains_data = null
+	elif not get_current_autotiler():
+		print("set_current_terrain_set() - not get_current_autotiler() - _current_terrains_data = null")
 		_current_terrains_data = null
 	else:
 		_current_terrains_data = get_current_autotiler()._get_terrains_data(p_terrain_set)
+		print("set_current_terrain_set() - _current_terrains_data -> %s" % _current_terrains_data)
 	current_terrain_set_changed.emit(p_terrain_set)
 
 
@@ -253,6 +241,7 @@ func get_current_terrains_data() -> TerrainsData:
 
 
 func clear_current_terrains_data() -> void:
+	print("clear_current_terrains_data()")
 	_current_terrains_data = null
 
 
