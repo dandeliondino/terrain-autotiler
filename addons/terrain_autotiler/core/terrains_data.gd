@@ -26,6 +26,8 @@ var tile_terrains := []
 var sorted_tile_terrains := []
 var peering_terrains := []
 
+var terrain_display_patterns : Dictionary
+
 # {tile_terrain : {peering_terrain: pattern count, ...}}
 var _tile_peering_terrains_counts := {}
 
@@ -232,6 +234,7 @@ func _load_patterns() -> void:
 
 	_populate_primary_patterns()
 	_populate_full_set_tile_terrains()
+	_populate_terrain_display_patterns()
 
 
 func _populate_full_set_tile_terrains() -> void:
@@ -244,6 +247,28 @@ func _populate_full_set_tile_terrains() -> void:
 				full_set = false
 		if full_set:
 			full_set_tile_terrains_set[tile_terrain] = true
+
+
+func _populate_terrain_display_patterns() -> void:
+	for tile_terrain in tile_terrains:
+		var pattern := get_primary_pattern(tile_terrain)
+		if pattern:
+			terrain_display_patterns[tile_terrain] = pattern
+			continue
+		var max_score_pattern : TerrainPattern
+		var max_score := -1
+		var primary_peering_terrain := get_primary_peering_terrain(tile_terrain)
+		for p in _patterns_by_terrain[tile_terrain]:
+			var score := 0
+			for bit in p.get_peering_bits():
+				var peering_terrain : int = p.get_bit_peering_terrain(bit)
+				if peering_terrain == primary_peering_terrain:
+					score += 1
+			if score > max_score:
+				max_score = score
+				max_score_pattern = p
+		if max_score_pattern:
+			terrain_display_patterns[tile_terrain] = max_score_pattern
 
 
 

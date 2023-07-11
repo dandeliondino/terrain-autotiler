@@ -4,6 +4,7 @@ extends Control
 const Context := preload("res://addons/terrain_autotiler/plugin/context.gd")
 const TileLocation := preload("res://addons/terrain_autotiler/core/tile_location.gd")
 const TerrainsData := preload("res://addons/terrain_autotiler/core/terrains_data.gd")
+const TerrainPattern := preload("res://addons/terrain_autotiler/core/terrain_pattern.gd")
 
 @onready var debug_panel: Control = %DebugPanel
 @onready var paint_mode_buttons: HBoxContainer = %PaintModeButtons
@@ -244,9 +245,9 @@ func _add_terrain(p_terrain : int) -> void:
 	var icon : Texture2D
 
 	var color := _tile_set.get_terrain_color(terrain_set, p_terrain)
-	var primary_pattern := terrains_data.get_primary_pattern(p_terrain)
-	if primary_pattern:
-		var tile_location := primary_pattern.get_first_tile()
+	var display_pattern : TerrainPattern = terrains_data.terrain_display_patterns.get(p_terrain, null)
+	if display_pattern:
+		var tile_location := display_pattern.get_first_tile()
 		if tile_location:
 			icon = _get_tile_texture(tile_location, color)
 	if not icon:
@@ -327,7 +328,11 @@ func _get_tile_texture(tile_location : TileLocation, color : Color) -> ImageText
 	tile_image.resize(tile_icon_size.x, tile_icon_size.y, interpolate_mode)
 
 	var image := _get_color_image(color, tile_image.get_format())
-	image.blit_rect(tile_image, tile_image.get_used_rect(), Vector2i(4,4))
+	var tile_rect := tile_image.get_used_rect()
+	# allow space for border and center tile
+	var offset := Vector2i(4,4) + Vector2i((tile_icon_size - tile_rect.size)/2.0)
+
+	image.blit_rect(tile_image, tile_image.get_used_rect(), offset)
 	return ImageTexture.create_from_image(image)
 
 
