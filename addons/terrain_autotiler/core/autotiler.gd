@@ -11,7 +11,7 @@ extends RefCounted
 ## [method set_cells_terrain_connect], [method set_cells_terrain_path],
 ## [method set_cells_terrains], and [method update_terrain_tiles].
 ## [codeblock]
-##     var autotiler = Autotiler.new($MyTileMap)
+##     var autotiler = Autotiler.new($TileMap)
 ##     autotiler.set_cells_terrain_connect(0, [Vector2i(0,0)], 0, 1)
 ## [/codeblock]
 ## Immediately after a new Autotiler object is instantiated,
@@ -22,7 +22,7 @@ extends RefCounted
 ## [br][br]
 ## Static functions alter a TileMap or TileSet's plugin-specific Metadata and can be called directly.
 ## [codeblock]
-##     Autotiler.set_cells_locked($MyTileMap, 0, [Vector2i(0,0)], true)
+##     Autotiler.set_cells_locked($TileMap, 0, [Vector2i(0,0)], true)
 ## [/codeblock]
 ##
 ## @tutorial(Terrain Autotiler Readme):            https://github.com/dandeliondino/terrain-autotiler
@@ -66,12 +66,44 @@ var _last_update_result : _UpdateResult
 
 ## For updates in connect mode, determines the maximum size in cells an update can expand to when needed.
 ## If smaller than the original update size, no expansion will occur.
-## Relevant for updates called with [method set_cells_terrain_connect] and [method set_cells_terrains] (when [param connect] is set to [code]true[/code]).
+## Relevant for updates called with [method set_cells_terrain_connect] or [method set_cells_terrains] with [param connect] set to [code]true[/code].
 ## [br][br]
 ## [constant UPDATE_SIZE_NO_EXPANSION] disables any expansion.
-## [br][br]
+## [br]
 ## [constant UPDATE_SIZE_NO_LIMIT] allows expansion to the entire layer.
-var max_update_size := Vector2i(64,64)
+## [br][br]
+## Connect mode always begins by updating only
+## up to a distance of 2 cells away from the provided coordinates.
+## But, in order for all tiles to match, sometimes cells further away need to be changed.
+## In these cases, the update will expand according to the [member maximum_update_size].
+## [codeblock]
+##    var autotiler = Autotiler.new($TileMap)
+##
+##    # only update the specified cells
+##    autotiler.set_cells_terrain_path(0, [Vector2i(1,1)], 0, 1)
+##
+##    # update the surrounding cells but no others
+##    autotiler.maximum_update_size = Autotiler.UPDATE_SIZE_NO_EXPANSION
+##    autotiler.set_cells_terrain_connect(0, [Vector2i(1,1)], 0, 1)
+##
+##    # update the entire layer if necessary
+##    autotiler.maximum_update_size = Autotiler.UPDATE_SIZE_NO_LIMIT
+##    autotiler.set_cells_terrain_connect(0, [Vector2i(1,1)], 0, 1)
+##
+##    # update up to a maximum region of 32 x 32 cells
+##    autotiler.maximum_update_size = Vector2i(32,32)
+##    autotiler.set_cells_terrain_connect(0, [Vector2i(1,1)], 0, 1)
+## [/codeblock]
+## Updating the entire layer ([member UPDATE_SIZE_NO_LIMIT])
+## will yield the most accurate and consistent results, but
+## will be slow if the TileMap is large.
+## (Layer-wide updates can also be called separately with [method update_terrain_tiles].)
+## [br][br]
+## The situation that leads to expanded updates can be avoided entirely by ensuring full sets of transition tiles between terrains,
+## or with careful terrain placement.
+## For more discussion, see the Github issue
+## [url=https://github.com/dandeliondino/terrain-autotiler/issues/1]Handling Local Non-Matching Tiles when Matching Solutions May Exist[/url].
+var maximum_update_size := Vector2i(64,64)
 
 var _cell_logging := false
 
@@ -112,11 +144,23 @@ func _queue_terrains_data_update() -> void:
 	_terrains_data_update_queued = true
 
 
-## The terrains data cache is automatically queued for update
-## whenever [signal TileSet.changed] is emitted, but the update
-## does not occur until the next terrain tile placement function is called.
-## Calling [method update_terrains_data] will force an immediate update of the cached data
-## and clear the update queue.
+## Manually reloads the [TileSet] terrains data and updates calculations
+## for the matching algorithm.
+## This cached data is automatically queued for update
+## whenever [signal TileSet.changed] is emitted, and then updated when
+## the next terrain tile placement function is called.
+## [b]update_terrains_data()[/b] instead forces an immediate update and clears the queue.
+## [br][br]
+## [b]This method is not recommended for most cases.[/b]
+## It is only useful if [TileSet], [TileSetAtlasSource] or
+## [TileData] objects are being changed at runtime.
+## If they are, manually timing the update can prevent lag when the next
+## [method set_cells_terrain_connect] or similar method is called.
+## It can also ensure that a change that does not emit [signal TileSet.changed]
+## is not get missed.
+## [br][br]
+## In contrast, [TileMap] data, including placed tiles and [b]Terrain Autotiler's[/b] locked cells,
+## are fully reloaded for every update and do not require special management.
 func update_terrains_data() -> void:
 	_terrains_data_update_queued = false
 	_terrain_datas.clear()
@@ -148,37 +192,61 @@ func update_terrains_data() -> void:
 #	METADATA FUNCTIONS
 # -----------------------------------------------------------------------------
 
-## Sets a terrain set's [enum MatchMode]. Only
+## [i]Static.[/i] Sets a terrain set's [enum MatchMode]. Only
 ## relevant for terrain sets with terrain mode set to [constant TileSet.TERRAIN_MODE_MATCH_CORNERS_AND_SIDES].
+## [br][br]See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler Wiki: Additional Features[/url].
 static func set_match_mode(tile_set : TileSet, terrain_set : int, match_mode : MatchMode) -> void:
 	# Metadata will emit tile_set.changed to queue update for any relevant Autotiler instance
 	_Metadata.set_match_mode(tile_set, terrain_set, match_mode)
 
 
-## See [method set_match_mode].
+## [i]Static.[/i] See [method set_match_mode].
 static func get_match_mode(tile_set : TileSet, terrain_set : int) -> MatchMode:
 	return _Metadata.get_match_mode(tile_set, terrain_set)
 
+## [i]Static.[/i]
+## Locks or unlocks cells in the provided [param cells] array of [Vector2i] coordinates
+## according to the [param locked] value.
+## See also [method get_locked_cells].
+## [br][br]
+## A locked cell retains its current tile during [b]Autotiler[/b] terrain placement or update functions.
+## This can be useful for preserving the tiles chosen by [method set_cells_terrain_path].
+## [codeblock]
+##    # draw a path and lock the cells
+##    var path_layer = 0
+##    var path_cells = [Vector2i(0,0), Vector2i(1,0), Vector2i(2,0)]
+##    var autotiler = Autotiler.new($TileMap)
+##    autotiler.set_cells_terrain_path(path_layer, path_cells, 0, 0)
+##    Autotiler.set_cells_locked($TileMap, path_layer, path_cells, true)
 ##
+##    # update surrounding terrain tiles without changing path tiles
+##    autotiler.update_terrain_tiles(path_layer)
+##
+##    # unlock the path cells and connect them to their neighbors
+##    Autotiler.set_cells_locked($TileMap, path_layer, path_cells, false)
+##    autotiler.update_terrain_tiles(path_layer)
+## [/codeblock]
+## For more information on locked cells, see [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler Wiki: Additional Features[/url].
 static func set_cells_locked(tile_map : TileMap, layer : int, cells : Array, locked : bool) -> void:
 	_Metadata.set_cells_locked(tile_map, layer, cells, locked)
 
-
+## [i]Static.[/i]
+## Returns an [Array] of [Vector2i] coordinates marked as locked on the specified [param tile_map] and [param layer]. See [method set_cells_locked].
 static func get_locked_cells(tile_map : TileMap, layer : int) -> Array:
 	return _Metadata.get_locked_cells(tile_map, layer)
 
 
-## Sets the primary peering terrain for a tile terrain. If not set, the primary peering terrain
+## [i]Static.[/i] Sets the primary peering terrain for a tile terrain. If not set, the primary peering terrain
 ## defaults to the tile terrain. This can be used, for example, to create
 ## tile terrains that are painted separately, but share the same primary peering terrain,
 ## so that they join together as if they are the same terrain when tiles are placed.
-## See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features#primary-peering-terrains]Terrain Autotiler: Additional Features[/url]
+## [br][br]See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler Wiki: Additional Features[/url].
 static func set_primary_peering_terrain(tile_set : TileSet, terrain_set : int, tile_terrain : int, peering_terrain : int) -> void:
 	# Metadata will emit tile_set.changed to queue update for any relevant Autotiler instance
 	_Metadata.set_primary_peering_terrain(tile_set, terrain_set, tile_terrain, peering_terrain)
 
 
-## See [method set_primary_peering_terrain].
+## [i]Static.[/i] See [method set_primary_peering_terrain].
 static func get_primary_peering_terrain(tile_set : TileSet, terrain_set : int, tile_terrain : int) -> int:
 	return _Metadata.get_primary_peering_terrain(tile_set, terrain_set, tile_terrain)
 
@@ -197,19 +265,19 @@ static func get_primary_peering_terrain(tile_set : TileSet, terrain_set : int, t
 
 
 
-## Updates all the cells in the [param cells] coordinates array
-## so that they use the given [param terrain] for the given [param terrain_set].
-## [br][br]
-## [param cells] can be an untyped Array or an Array[Vector2i]
+## Updates all the cells in the [param cells] array of [Vector2i] coordinates with tiles
+## of the provided [param terrain_set] and [param terrain]. Updates surrounding cells
+## of the same [param terrain_set], and the update may be expanded up to the [member maximum_update_size].
+## See [member maximum_update_size] for details.
 ## [br][br]
 ## Equivalent of [method TileMap.set_cells_terrain_connect],
 ## except the parameter [param ignore_empty_terrains] is deprecated.
-## Peering bits that are empty (set to -1) will always be used to match to empty cells
+## Peering bits that are empty (set to [code]-1[/code]) will always be used to match to empty cells
 ## or other empty peering bits.
-## [br][br]
 ## To specify peering bits to be ignored, use an [b]@ignore[/b] terrain.
-## For instructions on using [b]@ignore[/b] terrains,
-## see [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler: Additional Features[/url].
+## See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler: Additional Features[/url].
+## [br][br]
+## See also [method set_cells_terrain_path] and [method set_cells_terrains].
 func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, terrain : int) -> void:
 	if not is_instance_valid(_tile_map):
 		printerr("TileMap is not a valid instance")
@@ -222,10 +290,23 @@ func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, te
 		typed_cells,
 		terrain,
 		true,
-		max_update_size,
+		maximum_update_size,
 	)
 
-
+## Updates all the cells in the [param cells] array of [Vector2i] coordinates with tiles
+## of the provided [param terrain_set] and [param terrain]. Does not update any surrounding cells.
+## [br][br]
+## Use [method Autotiler.set_cells_locked] to prevent future updates from reconnecting
+## them to their neighbors.
+## [br][br]
+## Equivalent of [method TileMap.set_cells_terrain_path],
+## except the parameter [param ignore_empty_terrains] is deprecated.
+## Peering bits that are empty (set to [code]-1[/code]) will always be used to match to empty cells
+## or other empty peering bits.
+## To specify peering bits to be ignored, use an [b]@ignore[/b] terrain.
+## See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler: Additional Features[/url].
+## [br][br]
+## See also [method set_cells_terrain_connect] and [method set_cells_terrains].
 func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terrain : int) -> void:
 	if not is_instance_valid(_tile_map):
 		printerr("TileMap is not a valid instance")
@@ -238,10 +319,34 @@ func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terra
 		typed_cells,
 		terrain,
 		false,
-		max_update_size,
+		maximum_update_size,
 	)
 
-
+## Updates cells according to the provided [param cells_terrains] dictionary
+## with [Vector2i] coordinates as keys and [int] terrains as values.
+## It is faster than updating terrains individually with multiple calls to
+## [method set_cells_terrain_connect], and is useful
+## for updating large regions or procedurally generated maps.
+## To update all the terrain tiles on a layer without assigning new terrains,
+## use [method update_terrain_tiles].
+## [codeblock]
+##    var cells_terrains = {
+##        Vector2i(1,1): 1,
+##        Vector2i(1,2): 0,
+##        Vector2i(1,3): 1,
+##        Vector2i(1,4): 2,
+##    }
+##
+##    var autotiler = Autotiler.new($TileMap)
+##    autotiler.set_cells_terrains(0, cells_terrains, 0, true)
+## [/codeblock]
+## If [param connect] is [code]true[/code], cells will be connected
+## to surrounding cells of the same [param terrain_set], and the update may be
+## expanded up to the [member maximum_update_size]. See [member maximum_update_size] for details.
+## See [method set_cells_terrain_connect].
+## [br][br]
+## If [param connect] is [code]false[/code], no surrounding cells will be updated.
+## See [method set_cells_terrain_path].
 func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : int, connect : bool) -> void:
 	if not is_instance_valid(_tile_map):
 		printerr("TileMap is not a valid instance")
@@ -251,10 +356,18 @@ func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : 
 	_last_update_result = tiles_updater.paint_multiple_terrains(
 		cells_terrains,
 		connect,
-		max_update_size,
+		maximum_update_size,
 	)
 
 
+
+## Updates all the existing terrain tiles on a given [param layer].
+## [param terrain_set] has a default value of [member NULL_TERRAIN_SET].
+## If [param terrain_set] is set to the index of a valid terrain set,
+## only tiles belonging to that terrain set will be updated.
+## Otherwise, tiles of all terrain sets will be updated.
+## [br][br]
+## To assign new terrains to cells on an entire layer, use [method set_cells_terrains].
 func update_terrain_tiles(layer : int, terrain_set := NULL_TERRAIN_SET) -> void:
 	if not is_instance_valid(_tile_map):
 		printerr("TileMap is not a valid instance")
