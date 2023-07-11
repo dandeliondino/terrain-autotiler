@@ -34,6 +34,8 @@ var peering_bits : Array
 var result : UpdateResult
 var cell_logging : bool
 
+var _has_non_empty_neighbors := false
+
 # if false, then expanded update is not possible or has already been used
 # if true, can get all cells in _expanded_update_rect
 # if _expanded_update_rect is empty, then get all cells on layer
@@ -198,11 +200,14 @@ func _add_surrounding_cells_to_update(p_cells : Array[Vector2i], p_add_neighbors
 	return edge_cells
 
 
+
+
 func _add_surrounding_cells_as_neighbors(p_cells : Array[Vector2i]) -> void:
 	for coords in p_cells:
 		var tile_terrain : int = _cell_terrains[coords]
-		if tile_terrain == EMPTY_TERRAIN or terrains_data.single_pattern_terrains.has(tile_terrain):
-			# skip empty cells and single-pattern terrains
+		if tile_terrain == EMPTY_TERRAIN:
+			# (don't skip single pattern terrain here, need to know if expandable)
+			# skip empty cells
 			# even if they are painted, we can update them
 			# without knowing their neighbors
 			# (neighbors are only needed if they themselves need updating)
@@ -212,7 +217,6 @@ func _add_surrounding_cells_as_neighbors(p_cells : Array[Vector2i]) -> void:
 			if _cell_terrains.has(neighbor_coords):
 				continue
 			_add_cell_from_tile_data(neighbor_coords, NO_UPDATE)
-
 
 
 func _add_cell_from_tile_data(p_coords : Vector2i, p_update : bool) -> void:
@@ -229,6 +233,9 @@ func _add_cell_from_tile_data(p_coords : Vector2i, p_update : bool) -> void:
 	if p_update:
 		_add_painted_cell(p_coords, tile_data.terrain)
 		return
+
+	if not _tile_map_has_locked_cells or not _tile_map_locked_cells_set.has(p_coords):
+		_has_non_empty_neighbors = true
 
 	var pattern := TerrainPattern.new(peering_bits).create_from_tile_data(tile_data)
 	_add_neighbor_cell(p_coords, pattern)
@@ -268,6 +275,10 @@ func _add_neighbor_cell(p_coords : Vector2i, p_pattern : TerrainPattern) -> void
 # They are expensive and should never be attempted when there is no chance of
 # an improved outcome.
 func _setup_expanded_update_availability(p_current_update_cells : Array[Vector2i], p_max_update_size : Vector2i) -> void:
+	if not _has_non_empty_neighbors:
+		_expanded_update_available = false
+		return
+
 	if p_max_update_size == UPDATE_SIZE_NO_EXPANSION:
 		_expanded_update_available = false
 		return
