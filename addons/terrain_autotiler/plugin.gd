@@ -73,11 +73,11 @@ func _get_window_layout(configuration: ConfigFile) -> void:
 
 func _handles(object: Object) -> bool:
 	if not object is TileMap and not object is TileSet:
-#		print("_handles(): not object is TileMap - %s" % object)
+		print("_handles(): not object is TileMap - %s" % object)
 		context.set_current_tile_map(null)
 		return false
 
-#	print("_handles(): object is TileMap or TileSet - %s" % object)
+	print("_handles(): object is TileMap or TileSet - %s" % object)
 	if object is TileMap:
 		context.set_current_tile_map(object)
 	elif object is TileSet:
@@ -178,8 +178,9 @@ func populate_editor_references() -> void:
 	context.ed_terrain_tab_idx = context.ed_tab_bar.tab_count - 1
 	context.ed_tab_bar.tab_changed.connect(_on_ed_tab_changed)
 
-	ed_canvas_item_editor_viewport = get_editor_interface().get_base_control().find_children("*", "CanvasItemEditorViewport", true, false)[0]
+	context.ed_no_tileset_label = ed_tile_map_editor.find_children("*", "Label", false, false)[0]
 
+	ed_canvas_item_editor_viewport = get_editor_interface().get_base_control().find_children("*", "CanvasItemEditorViewport", true, false)[0]
 
 
 func _on_ed_tab_changed(_tab : int) -> void:

@@ -21,6 +21,9 @@ var terrains_panel : Control
 var ed_tab_bar : Control
 var ed_terrain_tab_idx : int
 
+var ed_no_tileset_label : Label
+
+
 func is_terrain_tab_active() -> bool:
 	return ed_tab_bar.current_tab == ed_terrain_tab_idx
 

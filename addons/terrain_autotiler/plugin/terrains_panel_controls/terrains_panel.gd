@@ -39,6 +39,7 @@ func setup(p_context : Context) -> void:
 	context.current_tile_set_changed.connect(_on_current_tile_set_changed)
 	context.terrain_change_requested.connect(_on_terrain_change_requested)
 	context.toggle_debug_panel_requested.connect(_on_toggle_debug_panel_requested)
+	context.ed_no_tileset_label.visibility_changed.connect(update_panel_display)
 
 	update_panel_display()
 
@@ -80,6 +81,11 @@ func update_panel_display() -> void:
 #		print("_update_panel_display() - not context.is_terrain_tab_active() -> hide()")
 		hide()
 		print("update_panel_display() - not active - hiding panel")
+		return
+
+	if context.ed_no_tileset_label.is_visible_in_tree():
+		hide()
+		print("update_panel_display() - no tileset label is shown - hiding panel")
 		return
 
 	context.clear_current_terrain_set()
