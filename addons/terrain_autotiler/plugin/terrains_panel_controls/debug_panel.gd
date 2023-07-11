@@ -50,6 +50,9 @@ func setup(p_context : Context) -> void:
 	var cell_logging_enabled := context.is_cell_logging_enabled()
 	menu_popup.set_item_checked(cell_logging_idx, cell_logging_enabled)
 
+	var bug_report_idx := menu_popup.get_item_index(BUG_REPORT)
+	menu_popup.set_item_icon(bug_report_idx, get_theme_icon("ExternalLink", "EditorIcons"))
+
 
 	results_label.add_theme_font_override("normal_font", get_theme_font("font", "CodeEdit"))
 	cell_label.add_theme_font_override("normal_font", get_theme_font("font", "CodeEdit"))
@@ -216,8 +219,8 @@ func _on_menu_popup_id_pressed(p_id : int) -> void:
 		menu_popup.set_item_checked(idx, not cell_logging_enabled)
 		context.settings.set_value(Context.Settings.ENABLE_CELL_LOGGING, not cell_logging_enabled)
 	elif p_id == BUG_REPORT:
-		# open github repo
-		pass
+		var url := "https://github.com/dandeliondino/terrain-autotiler/issues"
+		OS.shell_open(url)
 
 
 func _on_current_input_mode_changed(p_input_mode : Context.InputMode) -> void:
