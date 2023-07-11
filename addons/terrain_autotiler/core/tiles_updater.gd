@@ -322,7 +322,7 @@ func _setup_expanded_update_availability(p_current_update_cells : Array[Vector2i
 
 
 func _restart_with_expanded_update() -> void:
-	print("_restart_with_expanded_update")
+#	print("_restart_with_expanded_update")
 
 	# result.start_timer("_restart_with_expanded_update()")
 	# only get one chance at this

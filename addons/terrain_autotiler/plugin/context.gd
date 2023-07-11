@@ -96,11 +96,11 @@ func update_current_autotiler() -> void:
 		_current_autotiler = null
 	else:
 		_current_autotiler = Autotiler.new(_current_tile_map)
-	print("update_current_autotiler() -> %s" % _current_autotiler)
+#	print("update_current_autotiler() -> %s" % _current_autotiler)
 
 
 func _clear_current_autotiler() -> void:
-	print("_clear_current_autotiler()")
+#	print("_clear_current_autotiler()")
 	_current_autotiler = null
 	clear_current_terrains_data()
 	clear_current_update_result()
@@ -209,19 +209,19 @@ var _current_terrains_data : TerrainsData = null
 
 
 func set_current_terrain_set(p_terrain_set : int) -> void:
-	print("set_current_terrain_set() - %s" % p_terrain_set)
+#	print("set_current_terrain_set() - %s" % p_terrain_set)
 	if p_terrain_set == _current_terrain_set:
-		print("p_terrain_set == _current_terrain_set, returning")
+#		print("p_terrain_set == _current_terrain_set, returning")
 		return
 	_current_terrain_set = p_terrain_set
 	if _current_terrain_set == Autotiler.NULL_TERRAIN_SET:
 		_current_terrains_data = null
 	elif not get_current_autotiler():
-		print("set_current_terrain_set() - not get_current_autotiler() - _current_terrains_data = null")
+#		print("set_current_terrain_set() - not get_current_autotiler() - _current_terrains_data = null")
 		_current_terrains_data = null
 	else:
 		_current_terrains_data = get_current_autotiler()._get_terrains_data(p_terrain_set)
-		print("set_current_terrain_set() - _current_terrains_data -> %s" % _current_terrains_data)
+#		print("set_current_terrain_set() - _current_terrains_data -> %s" % _current_terrains_data)
 	current_terrain_set_changed.emit(p_terrain_set)
 
 
@@ -244,7 +244,7 @@ func get_current_terrains_data() -> TerrainsData:
 
 
 func clear_current_terrains_data() -> void:
-	print("clear_current_terrains_data()")
+#	print("clear_current_terrains_data()")
 	_current_terrains_data = null
 
 

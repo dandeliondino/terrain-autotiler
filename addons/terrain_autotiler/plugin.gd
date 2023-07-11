@@ -21,7 +21,7 @@ var tile_set_inspector_plugin := TileSetInspectorPlugin.new()
 # -----------------------------------
 
 func _enter_tree() -> void:
-	print("\n\n----------\n_enter_tree()")
+#	print("\n\n----------\n_enter_tree()")
 	context.editor_interface = get_editor_interface()
 
 	# update overlays to remove drawing of current cell
@@ -73,11 +73,11 @@ func _get_window_layout(configuration: ConfigFile) -> void:
 
 func _handles(object: Object) -> bool:
 	if not object is TileMap and not object is TileSet:
-		print("_handles(): not object is TileMap - %s" % object)
+#		print("_handles(): not object is TileMap - %s" % object)
 		context.set_current_tile_map(null)
 		return false
 
-	print("_handles(): object is TileMap or TileSet - %s" % object)
+#	print("_handles(): object is TileMap or TileSet - %s" % object)
 	if object is TileMap:
 		context.set_current_tile_map(object)
 	elif object is TileSet:
@@ -184,7 +184,7 @@ func populate_editor_references() -> void:
 
 
 func _on_ed_tab_changed(_tab : int) -> void:
-	print("\n\n_on_ed_tab_changed()")
+#	print("\n\n_on_ed_tab_changed()")
 	update_terrain_tab()
 
 
@@ -288,7 +288,7 @@ func remove_terrains_controls() -> void:
 
 
 func update_terrain_tab() -> void:
-	print("update_terrain_tab")
+#	print("update_terrain_tab")
 	if context.is_terrain_tab_active():
 #		print("update_terrain_tab: active")
 		autotiler_buttons.visible = true
@@ -310,7 +310,7 @@ func update_terrain_tab() -> void:
 func replace_editor_terrain_gui() -> void:
 	ed_terrains_panel.visible = false
 	update_terrain_tab()
-	print("replace_editor_terrain_gui() -> terrains_panel.update_panel_display()")
+#	print("replace_editor_terrain_gui() -> terrains_panel.update_panel_display()")
 	terrains_panel.update_panel_display()
 
 

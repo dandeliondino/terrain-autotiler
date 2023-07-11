@@ -76,27 +76,27 @@ func _on_toggle_debug_panel_requested(p_value : bool) -> void:
 # ------------------------------------------
 
 func update_panel_display() -> void:
-	print("update_panel_display()")
+#	print("update_panel_display()")
 	if not context.is_terrain_tab_active() or not context.settings.get_value(Context.Settings.REPLACE_TERRAIN_GUI):
 #		print("_update_panel_display() - not context.is_terrain_tab_active() -> hide()")
 		hide()
-		print("update_panel_display() - not active - hiding panel")
+#		print("update_panel_display() - not active - hiding panel")
 		return
 
 	if context.ed_no_tileset_label.is_visible_in_tree():
 		hide()
-		print("update_panel_display() - no tileset label is shown - hiding panel")
+#		print("update_panel_display() - no tileset label is shown - hiding panel")
 		return
 
 	context.clear_current_terrain_set()
 
 	_tile_map = context.get_current_tile_map()
-	print("update_panel_display() - _tile_map=%s" % _tile_map)
+#	print("update_panel_display() - _tile_map=%s" % _tile_map)
 	_tile_set = context.get_current_tile_set()
-	print("update_panel_display() - _tile_set=%s" % _tile_set)
+#	print("update_panel_display() - _tile_set=%s" % _tile_set)
 	if not _tile_set or not _tile_set.get_source_count() > 0:
 		hide()
-		print("update_panel_display() - no tile_set or source - hiding panel")
+#		print("update_panel_display() - no tile_set or source - hiding panel")
 		return
 
 	_update_filter_mode()
@@ -128,14 +128,14 @@ func _update_terrain_sets_option_button() -> void:
 	terrain_sets_option_button.clear()
 
 	if not _tile_map or not _tile_set or _tile_set.get_terrain_sets_count() == 0:
-		print("_update_terrain_sets_option_button() - no tile_map, no tile_set, or no terrain sets - disabling")
+#		print("_update_terrain_sets_option_button() - no tile_map, no tile_set, or no terrain sets - disabling")
 		terrain_sets_option_button.disabled = true
 		context.clear_current_terrain_set()
 		_update_terrains_list()
 		return
 
 	var terrain_sets_count := _tile_set.get_terrain_sets_count()
-	print("_update_terrain_sets_option_button() - terrain_sets_count=%s" % terrain_sets_count)
+#	print("_update_terrain_sets_option_button() - terrain_sets_count=%s" % terrain_sets_count)
 
 	for terrain_set in terrain_sets_count:
 		terrain_sets_option_button.add_item("[%s] Terrain Set" % terrain_set, terrain_set)
@@ -164,10 +164,10 @@ func _on_terrain_sets_option_button_item_selected(_idx: int) -> void:
 func _update_terrains_list() -> void:
 	terrains_list.clear()
 	if not context.has_current_terrain_set():
-		print("_update_terrains_list() - not context.has_current_terrain_set() - returning")
+#		print("_update_terrains_list() - not context.has_current_terrain_set() - returning")
 		return
 	if not context.get_current_terrains_data():
-		print("_update_terrains_list() - not context.get_current_terrains_data() - returning")
+#		print("_update_terrains_list() - not context.get_current_terrains_data() - returning")
 		return
 
 	var show_as_icons := icon_display_button.button_pressed
