@@ -23,6 +23,9 @@ var _neighbor_patterns := {} # {neighbor_coords : pattern}
 
 var _ignore_terrain := NULL_TERRAIN
 
+
+var coords : Vector2i
+
 # this is set when a pattern is selected and search pattern is no longer needed
 var pattern : TerrainPattern
 
@@ -32,15 +35,18 @@ var can_match_to_empty := true
 var primary_peering_terrain := NULL_TERRAIN
 
 
-func _init(p_terrains_data : TerrainsData, p_tile_terrain : int) -> void:
+func _init(p_terrains_data : TerrainsData, p_tile_terrain : int, p_allow_match_to_empty := true) -> void:
 	terrains_data = p_terrains_data
 	_peering_bits = terrains_data.cn.get_peering_bits()
 	_ignore_terrain = terrains_data.ignore_terrain
 
 	tile_terrain = p_tile_terrain
 	primary_peering_terrain = terrains_data.get_primary_peering_terrain(tile_terrain)
-	can_match_to_empty = terrains_data.can_match_to_empty(tile_terrain)
 
+	if p_allow_match_to_empty:
+		can_match_to_empty = terrains_data.can_match_to_empty(tile_terrain)
+	else:
+		can_match_to_empty = false
 
 	for bit in _peering_bits:
 		_bit_neighbor_bits[bit] = {}
@@ -53,6 +59,13 @@ func create_from_pattern(p_pattern : TerrainPattern) -> SearchPattern:
 	for bit in get_peering_bits():
 		set_bit_peering_terrain(bit, p_pattern.get_bit_peering_terrain(bit))
 	return self
+
+
+func has_empty_neighbor() -> bool:
+	for neighbor_coords in _neighbor_terrains:
+		if _neighbor_terrains[neighbor_coords] == EMPTY_TERRAIN:
+			return true
+	return false
 
 
 # adds neighbor_coords and the relevant bits
@@ -190,24 +203,28 @@ func get_match_score(p_pattern : TerrainPattern, p_allow_non_matching : bool) ->
 		# if the pattern's bit is set to ignore, it will always be a valid match
 		# so assign it the ignore score and move on
 		var pattern_peering_terrain := p_pattern.get_bit_peering_terrain(bit)
-		if pattern_peering_terrain == _ignore_terrain:
-			score += TerrainsData.ScoreValues[TerrainsData.Score.IGNORE]
-			continue
 
 		var peering_terrain := get_bit_peering_terrain(bit)
+
 		if peering_terrain != Autotiler.NULL_TERRAIN:
-			# if allow non-matching, it will compute score to include required peering bits
-			# otherwise, it will trust that the peering bits match
-			# and only add scores for unassigned peering bits
-			if not p_allow_non_matching:
+			if p_allow_non_matching:
+				if peering_terrain == pattern_peering_terrain:
+					score += TerrainsData.ScoreValues[TerrainsData.Score.MATCHING_BIT]
+				elif peering_terrain == _ignore_terrain:
+					score += TerrainsData.ScoreValues[TerrainsData.Score.IGNORE]
+				else:
+					score += TerrainsData.ScoreValues[TerrainsData.Score.NON_MATCHING_BIT]
 				continue
-			if peering_terrain == _ignore_terrain:
-				score += TerrainsData.ScoreValues[TerrainsData.Score.IGNORE]
-			elif peering_terrain == pattern_peering_terrain:
-				score += TerrainsData.ScoreValues[TerrainsData.Score.MATCHING_BIT]
 			else:
-				score += TerrainsData.ScoreValues[TerrainsData.Score.NON_MATCHING_BIT]
+				if peering_terrain == pattern_peering_terrain:
+					score += TerrainsData.ScoreValues[TerrainsData.Score.MATCHING_BIT]
+				elif peering_terrain == _ignore_terrain or pattern_peering_terrain == _ignore_terrain:
+					score += TerrainsData.ScoreValues[TerrainsData.Score.IGNORE]
+				else:
+					printerr("this shouldn't happen")
+					pass
 			continue
+
 
 		var bit_score : int = get_bit_peering_terrain_score(bit, pattern_peering_terrain)
 		if bit_score == INVALID_SCORE:
@@ -227,6 +244,9 @@ func get_match_score(p_pattern : TerrainPattern, p_allow_non_matching : bool) ->
 
 
 func get_top_pattern() -> TerrainPattern:
+	if terrains_data.has_ignore_terrain(tile_terrain):
+		return null
+
 	var pattern := TerrainPattern.new(get_peering_bits())
 	pattern.tile_terrain = tile_terrain
 	for bit in get_peering_bits():

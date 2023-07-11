@@ -4,6 +4,7 @@ extends Control
 const Context := preload("res://addons/terrain_autotiler/plugin/context.gd")
 const TileLocation := preload("res://addons/terrain_autotiler/core/tile_location.gd")
 const TerrainsData := preload("res://addons/terrain_autotiler/core/terrains_data.gd")
+const TerrainPattern := preload("res://addons/terrain_autotiler/core/terrain_pattern.gd")
 
 @onready var debug_panel: Control = %DebugPanel
 @onready var paint_mode_buttons: HBoxContainer = %PaintModeButtons
@@ -30,26 +31,17 @@ func setup(p_context : Context) -> void:
 	debug_panel.visible = context.settings.get_value(Context.Settings.SHOW_DEBUG_PANEL)
 	debug_panel.setup(context)
 	paint_mode_buttons.setup(context)
-
-	_tile_map = context.get_current_tile_map()
-
-
 	_setup_buttons()
-
-	_update_terrain_sets_option_button()
-
-
-#	_set_icon_scale(current_icon_scale_index)
 
 	_empty_icon = _get_icon_texture(get_theme_icon("Eraser", "EditorIcons"), Color.DIM_GRAY)
 
 	context.current_tile_map_changed.connect(_on_current_tile_map_changed)
 	context.current_tile_set_changed.connect(_on_current_tile_set_changed)
-	context.terrains_data_updated.connect(_on_terrains_data_updated)
 	context.terrain_change_requested.connect(_on_terrain_change_requested)
 	context.toggle_debug_panel_requested.connect(_on_toggle_debug_panel_requested)
+	context.ed_no_tileset_label.visibility_changed.connect(update_panel_display)
 
-	update_display()
+	update_panel_display()
 
 
 func _setup_buttons() -> void:
@@ -62,7 +54,7 @@ func _setup_buttons() -> void:
 	hide_terrains_check_box.set_pressed_no_signal(
 		context.settings.get_value(Context.Settings.TERRAINS_PANEL_HIDE_TERRAINS)
 	)
-	_set_icon_scale(context.settings.get_value(Context.Settings.TERRAINS_PANEL_ICON_SCALE))
+	_set_icon_scale(context.settings.get_value(Context.Settings.TERRAINS_PANEL_ICON_SCALE), false)
 
 
 func _on_icon_display_button_toggled(p_button_pressed : bool) -> void:
@@ -83,6 +75,36 @@ func _on_toggle_debug_panel_requested(p_value : bool) -> void:
 #		TERRAINS
 # ------------------------------------------
 
+func update_panel_display() -> void:
+#	print("update_panel_display()")
+	if not context.is_terrain_tab_active() or not context.settings.get_value(Context.Settings.REPLACE_TERRAIN_GUI):
+#		print("_update_panel_display() - not context.is_terrain_tab_active() -> hide()")
+		hide()
+#		print("update_panel_display() - not active - hiding panel")
+		return
+
+	if context.ed_no_tileset_label.is_visible_in_tree():
+		hide()
+#		print("update_panel_display() - no tileset label is shown - hiding panel")
+		return
+
+	context.clear_current_terrain_set()
+
+	_tile_map = context.get_current_tile_map()
+#	print("update_panel_display() - _tile_map=%s" % _tile_map)
+	_tile_set = context.get_current_tile_set()
+#	print("update_panel_display() - _tile_set=%s" % _tile_set)
+	if not _tile_set or not _tile_set.get_source_count() > 0:
+		hide()
+#		print("update_panel_display() - no tile_set or source - hiding panel")
+		return
+
+	_update_filter_mode()
+	context.update_current_autotiler()
+	_update_terrain_sets_option_button()
+	show()
+
+
 func _on_terrain_change_requested(p_terrain_set : int, p_terrain : int) -> void:
 	# if empty terrain, will ignore the terrain set provided
 	# and select the empty terrain currently available
@@ -101,58 +123,19 @@ func _on_terrain_change_requested(p_terrain_set : int, p_terrain : int) -> void:
 	_update_terrains_list()
 
 
-func update_display() -> void:
-	_tile_map = context.get_current_tile_map()
-#	print("update_display() - _tile_map = %s, context.get_current_tile_map() = %s" % [_tile_map, context.get_current_tile_map()])
-
-
-	if is_instance_valid(_tile_map):
-		_tile_set = _tile_map.tile_set
-		_update_filter_mode()
-	else:
-		_tile_set = null
-
-	if not context.is_terrain_tab_active():
-#		print("update_display() - not context.is_terrain_tab_active() -> hide()")
-		hide()
-		return
-	elif not _tile_set or not _tile_set.get_source_count() > 0:
-#		print("update_display() - not _tile_set or not _tile_set.get_source_count() > 0 -> hide()")
-		hide()
-	elif not context.settings.get_value(Context.Settings.REPLACE_TERRAIN_GUI):
-		hide()
-	else:
-#		print("update_display() - else -> show()")
-		show()
-
-	_update_terrain_sets_option_button()
-
-
-func _on_current_tile_map_changed(p_tile_map : TileMap) -> void:
-	_tile_map = p_tile_map
-	update_display()
-
-
-func _on_current_tile_set_changed(_tile_set : TileSet) -> void:
-	update_display()
-
-
-
-
-func _on_terrains_data_updated() -> void:
-	_update_terrain_sets_option_button()
-
 
 func _update_terrain_sets_option_button() -> void:
 	terrain_sets_option_button.clear()
 
 	if not _tile_map or not _tile_set or _tile_set.get_terrain_sets_count() == 0:
+#		print("_update_terrain_sets_option_button() - no tile_map, no tile_set, or no terrain sets - disabling")
 		terrain_sets_option_button.disabled = true
 		context.clear_current_terrain_set()
 		_update_terrains_list()
 		return
 
 	var terrain_sets_count := _tile_set.get_terrain_sets_count()
+#	print("_update_terrain_sets_option_button() - terrain_sets_count=%s" % terrain_sets_count)
 
 	for terrain_set in terrain_sets_count:
 		terrain_sets_option_button.add_item("[%s] Terrain Set" % terrain_set, terrain_set)
@@ -181,8 +164,10 @@ func _on_terrain_sets_option_button_item_selected(_idx: int) -> void:
 func _update_terrains_list() -> void:
 	terrains_list.clear()
 	if not context.has_current_terrain_set():
+#		print("_update_terrains_list() - not context.has_current_terrain_set() - returning")
 		return
 	if not context.get_current_terrains_data():
+#		print("_update_terrains_list() - not context.get_current_terrains_data() - returning")
 		return
 
 	var show_as_icons := icon_display_button.button_pressed
@@ -244,9 +229,9 @@ func _add_terrain(p_terrain : int) -> void:
 	var icon : Texture2D
 
 	var color := _tile_set.get_terrain_color(terrain_set, p_terrain)
-	var primary_pattern := terrains_data.get_primary_pattern(p_terrain)
-	if primary_pattern:
-		var tile_location := primary_pattern.get_first_tile()
+	var display_pattern : TerrainPattern = terrains_data.terrain_display_patterns.get(p_terrain, null)
+	if display_pattern:
+		var tile_location := display_pattern.get_first_tile()
 		if tile_location:
 			icon = _get_tile_texture(tile_location, color)
 	if not icon:
@@ -305,7 +290,7 @@ func _update_filter_mode() -> void:
 
 func _get_icon_texture(icon : Texture2D, color : Color) -> ImageTexture:
 	var icon_image := icon.get_image()
-	icon_image.resize(tile_icon_size.x, tile_icon_size.y, Image.INTERPOLATE_NEAREST)
+	icon_image.resize(tile_icon_size.x, tile_icon_size.y, Image.INTERPOLATE_BILINEAR)
 	var image := _get_color_image(color, icon_image.get_format())
 	var inside_image := _get_color_image(color.lightened(0.2),  icon_image.get_format())
 	image.blit_rect(inside_image, Rect2i(Vector2i.ZERO, tile_icon_size), Vector2i(4,4))
@@ -327,7 +312,11 @@ func _get_tile_texture(tile_location : TileLocation, color : Color) -> ImageText
 	tile_image.resize(tile_icon_size.x, tile_icon_size.y, interpolate_mode)
 
 	var image := _get_color_image(color, tile_image.get_format())
-	image.blit_rect(tile_image, tile_image.get_used_rect(), Vector2i(4,4))
+	var tile_rect := tile_image.get_used_rect()
+	# allow space for border and center tile
+	var offset := Vector2i(4,4) + Vector2i((tile_icon_size - tile_rect.size)/2.0)
+
+	image.blit_rect(tile_image, tile_image.get_used_rect(), offset)
 	return ImageTexture.create_from_image(image)
 
 
@@ -360,7 +349,7 @@ const IconScales := [
 
 var current_icon_scale_index := 1
 
-func _set_icon_scale(idx : int) -> void:
+func _set_icon_scale(idx : int, p_update : bool) -> void:
 	if idx < 0 or idx >= IconScales.size():
 		return
 	if current_icon_scale_index == idx:
@@ -372,15 +361,24 @@ func _set_icon_scale(idx : int) -> void:
 	current_icon_scale_index = idx
 	context.settings.set_value(Context.Settings.TERRAINS_PANEL_ICON_SCALE, idx)
 
-	_update_terrains_list()
+	if p_update:
+		_update_terrains_list()
 
 
 func _on_minus_button_pressed() -> void:
-	_set_icon_scale(current_icon_scale_index - 1)
+	_set_icon_scale(current_icon_scale_index - 1, true)
 
 
 func _on_plus_button_pressed() -> void:
-	_set_icon_scale(current_icon_scale_index + 1)
+	_set_icon_scale(current_icon_scale_index + 1, true)
 
 
 
+func _on_current_tile_map_changed(_tile_map : TileMap) -> void:
+	if is_visible_in_tree():
+		update_panel_display()
+
+
+func _on_current_tile_set_changed(_tile_set : TileSet) -> void:
+	if is_visible_in_tree():
+		update_panel_display()

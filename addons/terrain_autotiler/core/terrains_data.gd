@@ -26,6 +26,8 @@ var tile_terrains := []
 var sorted_tile_terrains := []
 var peering_terrains := []
 
+var terrain_display_patterns : Dictionary
+
 # {tile_terrain : {peering_terrain: pattern count, ...}}
 var _tile_peering_terrains_counts := {}
 
@@ -61,6 +63,8 @@ var ignore_terrain_enabled := false
 var ignore_terrain_substitutes : PackedInt32Array
 
 var single_pattern_terrains : PackedInt32Array = []
+
+#var profiler := Profiler.new()
 
 # ----------------------------------------------------
 #	SCORES
@@ -107,12 +111,10 @@ enum Score {
 const ScoreValues := {
 	Score.PRIMARY : 300,
 	Score.PRIMARY_LOW : 250,
-	Score.IGNORE : 201,
-		# this puts ignore terrain below base terrain
-		# but above all others (as they can only get lower with the priority modifier)
+	Score.IGNORE : 150,
 	Score.HIGH : 200,
 	Score.LOW : 100,
-	Score.MATCHING_BIT : 400,
+	Score.MATCHING_BIT : 300,
 	Score.NON_MATCHING_BIT : -10000,
 }
 
@@ -140,10 +142,19 @@ func _init(p_tile_set : TileSet, p_terrain_set : int) -> void:
 
 	_setup_empty_terrain_data()
 
+	# profiler.start_timer("_load_terrains()")
 	_load_terrains()
+	# profiler.stop_timer("_load_terrains()")
+	# profiler.start_timer("_load_patterns()")
 	_load_patterns()
+	# profiler.stop_timer("_load_patterns()")
+	# profiler.start_timer("_sort_tile_terrains()")
 	_sort_tile_terrains()
+	# profiler.stop_timer("_sort_tile_terrains()")
+	# profiler.start_timer("_load_transitions()")
 	_load_transitions()
+	# profiler.stop_timer("_load_transitions()")
+	# profiler.print_timers()
 
 
 # -----------------------------------------------
@@ -223,6 +234,7 @@ func _load_patterns() -> void:
 
 	_populate_primary_patterns()
 	_populate_full_set_tile_terrains()
+	_populate_terrain_display_patterns()
 
 
 func _populate_full_set_tile_terrains() -> void:
@@ -235,6 +247,28 @@ func _populate_full_set_tile_terrains() -> void:
 				full_set = false
 		if full_set:
 			full_set_tile_terrains_set[tile_terrain] = true
+
+
+func _populate_terrain_display_patterns() -> void:
+	for tile_terrain in tile_terrains:
+		var pattern := get_primary_pattern(tile_terrain)
+		if pattern:
+			terrain_display_patterns[tile_terrain] = pattern
+			continue
+		var max_score_pattern : TerrainPattern
+		var max_score := -1
+		var primary_peering_terrain := get_primary_peering_terrain(tile_terrain)
+		for p in _patterns_by_terrain[tile_terrain]:
+			var score := 0
+			for bit in p.get_peering_bits():
+				var peering_terrain : int = p.get_bit_peering_terrain(bit)
+				if peering_terrain == primary_peering_terrain:
+					score += 1
+			if score > max_score:
+				max_score = score
+				max_score_pattern = p
+		if max_score_pattern:
+			terrain_display_patterns[tile_terrain] = max_score_pattern
 
 
 
@@ -376,7 +410,14 @@ func _load_transitions() -> void:
 
 
 func _create_transition_scores_list(p_tile_terrains : Array) -> void:
+
+	# profiler.start_timer("_get_transition_key()")
 	var transition_key := _get_transition_key(p_tile_terrains)
+	if _transition_peering_terrains.has(transition_key):
+		# profiler.stop_timer("_get_transition_key()")
+		return
+	# profiler.stop_timer("_get_transition_key()")
+	# profiler.start_timer("_create_transition_scores_list()")
 	var peering_terrain_scores := {}
 
 	for peering_terrain in peering_terrains:
@@ -387,11 +428,8 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 
 		for tile_terrain in p_tile_terrains:
 			if not _has_peering_terrain(tile_terrain, peering_terrain):
-				if _has_peering_terrain(tile_terrain, ignore_terrain):
-					ignore = true
-				else:
-					missing = true
-					break
+				missing = true
+				break
 			elif get_primary_peering_terrain(tile_terrain) == peering_terrain:
 				primary = true
 			elif _get_peering_terrain_pattern_count(tile_terrain, peering_terrain) < cn.get_full_set_pattern_count():
@@ -405,6 +443,10 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 		if priority_score == NOT_FOUND:
 			continue
 
+
+#		if ignore:
+#			peering_terrain_scores[peering_terrain] = \
+#				ScoreValues[Score.IGNORE] - priority_score
 		if low_count:
 			if primary:
 				peering_terrain_scores[peering_terrain] = \
@@ -412,15 +454,17 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 			else:
 				peering_terrain_scores[peering_terrain] = \
 					ScoreValues[Score.LOW] - priority_score
-		elif ignore:
-			peering_terrain_scores[peering_terrain] = \
-				ScoreValues[Score.IGNORE] - priority_score
 		elif primary:
 			peering_terrain_scores[peering_terrain] = \
 				ScoreValues[Score.PRIMARY] - priority_score
 		else:
 			peering_terrain_scores[peering_terrain] = \
 				ScoreValues[Score.HIGH] - priority_score
+
+	for tile_terrain in p_tile_terrains:
+		if _has_peering_terrain(tile_terrain, ignore_terrain):
+			peering_terrain_scores[ignore_terrain] = \
+				ScoreValues[Score.IGNORE]
 
 	var sorted_peering_terrains := peering_terrain_scores.keys()
 	sorted_peering_terrains.sort_custom(
@@ -434,6 +478,8 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 
 	_transition_peering_terrains[transition_key] = sorted_dict
 
+	# profiler.stop_timer("_create_transition_scores_list()")
+
 
 
 func get_transition_dict(p_tile_terrains : Array) -> Dictionary:
@@ -441,13 +487,15 @@ func get_transition_dict(p_tile_terrains : Array) -> Dictionary:
 	return _transition_peering_terrains.get(key, {})
 
 
-func _get_transition_key(p_tile_terrains : Array) -> StringName:
+# over 2x faster to use Array rather than StringName
+# slightly slower to use PackedInt32Array
+func _get_transition_key(p_tile_terrains : Array) -> Array:
 	var terrains_set := {}
 	for tile_terrain in p_tile_terrains:
 		terrains_set[tile_terrain] = true
 	var sorted_terrains := terrains_set.keys()
 	sorted_terrains.sort()
-	return ".%s." % ".".join(sorted_terrains)
+	return sorted_terrains
 
 
 func _has_peering_terrain(p_tile_terrain : int, p_peering_terrain : int) -> bool:
@@ -474,8 +522,8 @@ func _get_peering_terrain_pattern_count(p_tile_terrain : int, p_peering_terrain 
 # get_pattern() - 3msec per 1000 calls
 # get_pattern_by_id() - 11msec per 1000 calls
 # (may be partly due to creating IDs, but that part can't be skipped)
-func get_pattern(p_pattern : TerrainPattern) -> TerrainPattern:
-	if has_ignore_terrain(p_pattern.tile_terrain):
+func get_pattern(p_pattern : TerrainPattern, p_constrain_ignore_terrain := false) -> TerrainPattern:
+	if has_ignore_terrain(p_pattern.tile_terrain) && not p_constrain_ignore_terrain:
 		return _get_pattern_with_ignore_terrain(p_pattern)
 
 	var dict : Dictionary = _pattern_lookup.get(p_pattern.tile_terrain, {})
@@ -617,7 +665,7 @@ func get_primary_pattern(p_tile_terrain : int) -> TerrainPattern:
 #  DEBUG TEXT
 # -----------------------------------------------
 
-func get_debug_text() -> String:
+func get_debug_text(p_show_transitions : bool) -> String:
 	var text := "Terrain patterns cached: %s" % _patterns_by_id.size()
 	text += "\nTile terrains: %s + EMPTY" % tile_terrains.size()
 	text += "\nPeering terrains: %s" % peering_terrains.size()
@@ -630,7 +678,7 @@ func get_debug_text() -> String:
 	text += "\n"
 
 	for tile_terrain in tile_terrain_order:
-		text += _get_debug_tile_terrain_text(tile_terrain)
+		text += _get_debug_tile_terrain_text(tile_terrain, p_show_transitions)
 		text += "\n"
 
 
@@ -648,7 +696,7 @@ func _get_debug_tile_terrain_order() -> PackedInt32Array:
 	return PackedInt32Array(printed_tile_terrain_order)
 
 
-func _get_debug_tile_terrain_text(p_tile_terrain : int) -> String:
+func _get_debug_tile_terrain_text(p_tile_terrain : int, p_show_transitions : bool) -> String:
 	var text := ""
 
 	text += "\n"
@@ -681,27 +729,15 @@ func _get_debug_tile_terrain_text(p_tile_terrain : int) -> String:
 	text += "\n\t"
 	text += "\n\t".join(peering_terrain_texts)
 
-	text += "\n\nTransition peering terrain scores:"
-	var to_terrains := sorted_tile_terrains + [EMPTY_TERRAIN]
-	var a := p_tile_terrain
-	for b in to_terrains:
-		text += _get_debug_transition_texts([a, b])
+	if p_show_transitions:
+		text += "\n\nTransition peering terrain scores:"
+		var to_terrains := sorted_tile_terrains + [EMPTY_TERRAIN]
+		var a := p_tile_terrain
+		for b in to_terrains:
+			text += _get_debug_transition_texts([a, b])
 
-	for b in to_terrains:
-		for c in to_terrains:
-			var terrains_set := {}
-			terrains_set[a] = true
-			if terrains_set.has(b):
-				continue
-			terrains_set[b] = true
-			if terrains_set.has(c):
-				continue
-			terrains_set[c] = true
-			text += _get_debug_transition_texts(terrains_set.keys())
-
-	for b in to_terrains:
-		for c in to_terrains:
-			for d in to_terrains:
+		for b in to_terrains:
+			for c in to_terrains:
 				var terrains_set := {}
 				terrains_set[a] = true
 				if terrains_set.has(b):
@@ -710,13 +746,32 @@ func _get_debug_tile_terrain_text(p_tile_terrain : int) -> String:
 				if terrains_set.has(c):
 					continue
 				terrains_set[c] = true
-				if terrains_set.has(d):
-					continue
 				text += _get_debug_transition_texts(terrains_set.keys())
+
+		for b in to_terrains:
+			for c in to_terrains:
+				for d in to_terrains:
+					var terrains_set := {}
+					terrains_set[a] = true
+					if terrains_set.has(b):
+						continue
+					terrains_set[b] = true
+					if terrains_set.has(c):
+						continue
+					terrains_set[c] = true
+					if terrains_set.has(d):
+						continue
+					text += _get_debug_transition_texts(terrains_set.keys())
 
 	text += "\n"
 	text += _get_terrain_color_template(p_tile_terrain) % "************************************"
 	return text
+
+
+func get_debug_transitions_text() -> String:
+	return ""
+
+
 
 
 func _get_debug_transition_texts(p_terrains : Array) -> String:
