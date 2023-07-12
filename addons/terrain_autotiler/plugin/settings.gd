@@ -62,7 +62,7 @@ func save_config(config : ConfigFile) -> void:
 
 	for setting in _settings:
 		var value = get_value(setting)
-		config.set_value(Autotiler.PLUGIN_NAME, setting, value)
+		config.set_value(Autotiler._PLUGIN_NAME, setting, value)
 
 
 # Called once, on plugin activation.
@@ -73,14 +73,14 @@ func _load_config() -> void:
 	if not config:
 		return
 
-	if not config.has_section(Autotiler.PLUGIN_NAME):
+	if not config.has_section(Autotiler._PLUGIN_NAME):
 		return
 
 	for setting in _settings:
-		if not config.has_section_key(Autotiler.PLUGIN_NAME, setting):
+		if not config.has_section_key(Autotiler._PLUGIN_NAME, setting):
 			continue
 
-		var value = config.get_value(Autotiler.PLUGIN_NAME, setting, null)
+		var value = config.get_value(Autotiler._PLUGIN_NAME, setting, null)
 		_settings[setting] = value
 
 

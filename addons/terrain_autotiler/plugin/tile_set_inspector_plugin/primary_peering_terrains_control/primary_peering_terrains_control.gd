@@ -18,7 +18,7 @@ func setup(p_tile_set : TileSet, p_terrain_set : int) -> void:
 
 	for tile_terrain in tile_set.get_terrains_count(terrain_set):
 		var tile_terrain_name := tile_set.get_terrain_name(terrain_set, tile_terrain)
-		if tile_terrain_name == Autotiler.IGNORE_TERRAIN_NAME:
+		if tile_terrain_name == Autotiler._IGNORE_TERRAIN_NAME:
 			continue
 		var terrain_item : TerrainItem = TerrainItemScene.instantiate()
 		terrain_items_container.add_child(terrain_item)

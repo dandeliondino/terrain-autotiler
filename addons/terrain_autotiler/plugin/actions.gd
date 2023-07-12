@@ -16,7 +16,7 @@ func update_layer() -> void:
 	var layer := context.get_current_layer()
 	var tile_map := context.get_current_tile_map()
 	var autotiler := context.get_current_autotiler()
-	autotiler.cell_logging = context.is_cell_logging_enabled()
+	autotiler._cell_logging = context.is_cell_logging_enabled()
 	autotiler.update_terrain_tiles(layer)
 
 
@@ -101,7 +101,7 @@ func paint_selection(p_create_undo_redo := true) -> void:
 	var layer := context.get_current_layer()
 	var tile_map := context.get_current_tile_map()
 	var autotiler := context.get_current_autotiler()
-	autotiler.cell_logging = context.is_cell_logging_enabled()
+	autotiler._cell_logging = context.is_cell_logging_enabled()
 
 	if paint_mode == Context.PaintMode.CONNECT:
 		autotiler.set_cells_terrain_connect(

@@ -1,3 +1,4 @@
+@tool
 extends RefCounted
 
 const TileLocation := preload("res://addons/terrain_autotiler/core/tile_location.gd")

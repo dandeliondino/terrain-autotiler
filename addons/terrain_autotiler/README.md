@@ -23,10 +23,10 @@ Terrain Autotiler is a replacement terrain tile matching algorithm for Godot 4. 
     - Ability to recalculate and update all terrain tiles in a TileMap layer.
 
 #### Scripting
-- Create a new Autotiler object using `Autotiler.new(tile_map)`, then use it to access terrain tile placement functions.
-- `set_cells_terrain_connect` and `set_cells_terrain_path` work the same as their base TileMap functions, but provide more accurate, reproducible results.
-- `set_cells_terrains` places multiple terrains by providing dictionary of `{coords (Vector2i) : terrain (int)}`. This makes bulk updates in procedural generation faster and simpler.
-- `update_terrain_tiles` recalculates and updates all the terrain tiles in a layer.
+- Create a new Autotiler object using `Autotiler.new(tile_map)`, then use it to access terrain tile placement functions. Contains [complete in-editor documentation](https://github.com/dandeliondino/terrain-autotiler/wiki/Scripting).
+    - `set_cells_terrain_connect` and `set_cells_terrain_path` work the same as their base TileMap functions, but provide more accurate, reproducible results.
+    - `set_cells_terrains` places multiple terrains by providing dictionary of `{coords (Vector2i) : terrain (int)}`. This makes bulk updates in procedural generation faster and simpler.
+    - `update_terrain_tiles` recalculates and updates all the terrain tiles in a layer.
 
 #### Editor Plugin
 - TileMap editor: Toggle seamlessly between Godot 4 and Terrain Autotiler painting tools in the Terrains tab.

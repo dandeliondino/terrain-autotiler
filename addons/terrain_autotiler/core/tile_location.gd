@@ -1,3 +1,4 @@
+@tool
 extends RefCounted
 
 var source_id := -1

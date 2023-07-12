@@ -83,7 +83,7 @@ func _get_terrain_set_from_property(p_property_name : String) -> int:
 func _has_ignore_terrain(p_tile_set : TileSet, p_terrain_set : int) -> bool:
 	for terrain in p_tile_set.get_terrains_count(p_terrain_set):
 		var terrain_name := p_tile_set.get_terrain_name(p_terrain_set, terrain)
-		if terrain_name == Autotiler.IGNORE_TERRAIN_NAME:
+		if terrain_name == Autotiler._IGNORE_TERRAIN_NAME:
 			return true
 	return false
 

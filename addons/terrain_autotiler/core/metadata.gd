@@ -118,12 +118,12 @@ static func _get_terrain_set_meta(tile_set : TileSet, terrain_set : int) -> Dict
 
 static func _validate_match_mode(terrain_set_meta : Dictionary, tile_set : TileSet) -> void:
 	if not terrain_set_meta.has(META_MATCH_MODE):
-		terrain_set_meta[META_MATCH_MODE] = Autotiler.DEFAULT_MATCH_MODE
+		terrain_set_meta[META_MATCH_MODE] = Autotiler._DEFAULT_MATCH_MODE
 
 
 static func get_match_mode(tile_set : TileSet, terrain_set : int) -> Autotiler.MatchMode:
 	var terrain_set_meta := _get_terrain_set_meta(tile_set, terrain_set)
-	return terrain_set_meta.get(META_MATCH_MODE, Autotiler.DEFAULT_MATCH_MODE)
+	return terrain_set_meta.get(META_MATCH_MODE, Autotiler._DEFAULT_MATCH_MODE)
 
 
 static func set_match_mode(tile_set : TileSet, terrain_set : int, match_mode : Autotiler.MatchMode) -> void:
@@ -144,7 +144,7 @@ static func _validate_primary_peering_terrains(terrain_set_meta : Dictionary, ti
 			primary_peering_terrains.erase(terrain)
 
 	for terrain in tile_set.get_terrains_count(terrain_set):
-		if tile_set.get_terrain_name(terrain_set, terrain) == Autotiler.IGNORE_TERRAIN_NAME:
+		if tile_set.get_terrain_name(terrain_set, terrain) == Autotiler._IGNORE_TERRAIN_NAME:
 			continue
 		var primary_terrain : int = primary_peering_terrains.get(terrain, Autotiler.NULL_TERRAIN)
 		if primary_terrain == Autotiler.NULL_TERRAIN or primary_terrain >= tile_set.get_terrains_count(terrain_set):

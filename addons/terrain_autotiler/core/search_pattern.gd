@@ -1,3 +1,4 @@
+@tool
 extends "res://addons/terrain_autotiler/core/terrain_pattern.gd"
 
 # redefine to avoid lookups
