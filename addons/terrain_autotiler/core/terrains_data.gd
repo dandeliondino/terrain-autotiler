@@ -178,7 +178,7 @@ func _load_terrains() -> void:
 		var terrain_name := tile_set.get_terrain_name(terrain_set, terrain)
 		terrain_names[terrain] = terrain_name
 
-		if terrain_name == Autotiler.IGNORE_TERRAIN_NAME:
+		if terrain_name == Autotiler._IGNORE_TERRAIN_NAME:
 			ignore_terrain = terrain
 			ignore_terrain_enabled = true
 			continue

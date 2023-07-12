@@ -4,34 +4,36 @@ extends RefCounted
 
 ## The public class of the Terrain Autotiler plugin.
 ## Provides terrain tile placement and update functions
-## and the ability to change plugin-specific TileMap and TileSet metadata.
+## and the ability to change plugin-specific Metadata.
 ##
-## Instantiate a new [b]Autotiler[/b] with a [TileMap],
-## and then use it to call terrain placement and update functions including
+## Initialize a new [b]Autotiler[/b] with a [TileMap],
+## and then use it to access functions including
 ## [method set_cells_terrain_connect], [method set_cells_terrain_path],
 ## [method set_cells_terrains], and [method update_terrain_tiles].
 ## [codeblock]
 ##     var autotiler = Autotiler.new($TileMap)
 ##     autotiler.set_cells_terrain_connect(0, [Vector2i(0,0)], 0, 1)
 ## [/codeblock]
-## Immediately after a new Autotiler object is instantiated,
-## it loads all the terrains and tiles from the [TileSet] and caches
-## calculations for its matching algorithm.
-## When calling multiple terrain placement or update functions,
-## it is therefore most performant to reuse the same Autotiler. See also: [method update_terrains_data].
+## The [b]Autotiler[/b] instance caches terrain data and calculations,
+## so it is recommended to reuse it for the same TileMap.
+## See [method update_terrains_data] for details.
 ## [br][br]
-## Static functions alter a TileMap or TileSet's plugin-specific Metadata and can be called directly.
+## However, static functions that change a TileMap or TileSet's plugin-specific Metadata and can be called directly.
 ## [codeblock]
 ##     Autotiler.set_cells_locked($TileMap, 0, [Vector2i(0,0)], true)
 ## [/codeblock]
 ##
-## @tutorial(Terrain Autotiler Readme):            https://github.com/dandeliondino/terrain-autotiler
+## @tutorial(Readme):            https://github.com/dandeliondino/terrain-autotiler
+## @tutorial(Wiki):            https://github.com/dandeliondino/terrain-autotiler/wiki
 
 
-const PLUGIN_NAME := "TERRAIN_AUTOTILER"
-const PLUGIN_CONFIG_PATH := "res://addons/terrain_autotiler/plugin.cfg"
 
-const IGNORE_TERRAIN_NAME := "@ignore"
+
+
+const _PLUGIN_NAME := "TERRAIN_AUTOTILER"
+const _PLUGIN_CONFIG_PATH := "res://addons/terrain_autotiler/plugin.cfg"
+
+const _IGNORE_TERRAIN_NAME := "@ignore"
 
 const UPDATE_SIZE_NO_EXPANSION := Vector2i.ZERO
 const UPDATE_SIZE_NO_LIMIT := Vector2i(-1, -1)
@@ -39,14 +41,14 @@ const UPDATE_SIZE_NO_LIMIT := Vector2i(-1, -1)
 const NULL_TERRAIN_SET := -1
 const NULL_TERRAIN := -99
 const EMPTY_TERRAIN := -1
-const EMPTY_RECT := Rect2i()
+const _EMPTY_RECT := Rect2i()
 
 enum MatchMode {
 	MINIMAL = 0,
 	FULL = 1,
 }
 
-const DEFAULT_MATCH_MODE := MatchMode.MINIMAL
+const _DEFAULT_MATCH_MODE := MatchMode.MINIMAL
 
 
 const _UpdateResult := preload("res://addons/terrain_autotiler/core/update_result.gd")
@@ -79,7 +81,7 @@ var _last_update_result : _UpdateResult
 ## [codeblock]
 ##    var autotiler = Autotiler.new($TileMap)
 ##
-##    # only update the specified cells
+##    # only update the provided cells
 ##    autotiler.set_cells_terrain_path(0, [Vector2i(1,1)], 0, 1)
 ##
 ##    # update the surrounding cells but no others
@@ -192,9 +194,14 @@ func update_terrains_data() -> void:
 #	METADATA FUNCTIONS
 # -----------------------------------------------------------------------------
 
-## [i]Static.[/i] Sets a terrain set's [enum MatchMode]. Only
+## [i]Static.[/i] Sets a Corners and Sides terrain set's match mode. Only
 ## relevant for terrain sets with terrain mode set to [constant TileSet.TERRAIN_MODE_MATCH_CORNERS_AND_SIDES].
-## [br][br]See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler Wiki: Additional Features[/url].
+## [br][br]
+## [member MatchMode.MINIMAL] is the default mode. It is the same as the base Corners and Sides mode in Godot 4 and 3x3 Minimal mode in Godot 3. [b]A full set requires 47 tiles.[/b]
+## [br][br]
+## [member MatchMode.FULL] matches diagonal tiles individually. It is the same as 3x3 mode in Godot 3. [b]A full set requires 256 tiles.[/b]
+## [br][br]
+## See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler Wiki: Additional Features[/url].
 static func set_match_mode(tile_set : TileSet, terrain_set : int, match_mode : MatchMode) -> void:
 	# Metadata will emit tile_set.changed to queue update for any relevant Autotiler instance
 	_Metadata.set_match_mode(tile_set, terrain_set, match_mode)
@@ -219,7 +226,7 @@ static func get_match_mode(tile_set : TileSet, terrain_set : int) -> MatchMode:
 ##    autotiler.set_cells_terrain_path(path_layer, path_cells, 0, 0)
 ##    Autotiler.set_cells_locked($TileMap, path_layer, path_cells, true)
 ##
-##    # update surrounding terrain tiles without changing path tiles
+##    # update all other terrain tiles on the layer without changing path tiles
 ##    autotiler.update_terrain_tiles(path_layer)
 ##
 ##    # unlock the path cells and connect them to their neighbors
@@ -231,7 +238,7 @@ static func set_cells_locked(tile_map : TileMap, layer : int, cells : Array, loc
 	_Metadata.set_cells_locked(tile_map, layer, cells, locked)
 
 ## [i]Static.[/i]
-## Returns an [Array] of [Vector2i] coordinates marked as locked on the specified [param tile_map] and [param layer]. See [method set_cells_locked].
+## Returns an [Array] of [Vector2i] coordinates marked as locked on the provided [param tile_map] and [param layer]. See [method set_cells_locked].
 static func get_locked_cells(tile_map : TileMap, layer : int) -> Array:
 	return _Metadata.get_locked_cells(tile_map, layer)
 
@@ -296,7 +303,7 @@ func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, te
 ## Updates all the cells in the [param cells] array of [Vector2i] coordinates with tiles
 ## of the provided [param terrain_set] and [param terrain]. Does not update any surrounding cells.
 ## [br][br]
-## Use [method Autotiler.set_cells_locked] to prevent future updates from reconnecting
+## Use [method Autotiler.set_cells_locked] to prevent future updates from connecting
 ## them to their neighbors.
 ## [br][br]
 ## Equivalent of [method TileMap.set_cells_terrain_path],
@@ -323,11 +330,11 @@ func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terra
 	)
 
 ## Updates cells according to the provided [param cells_terrains] dictionary
-## with [Vector2i] coordinates as keys and [int] terrains as values.
-## It is faster than updating terrains individually with multiple calls to
-## [method set_cells_terrain_connect], and is useful
-## for updating large regions or procedurally generated maps.
-## To update all the terrain tiles on a layer without assigning new terrains,
+## with [Vector2i] [b]coordinates[/b] as keys and [int] [b]terrains[/b] as values.
+## Faster than updating terrains individually with multiple calls to
+## [method set_cells_terrain_connect]. Can be used to update
+## large regions or procedurally generated maps.
+## To update all the terrain tiles on a layer [i]without[/i] assigning new terrains,
 ## use [method update_terrain_tiles].
 ## [codeblock]
 ##    var cells_terrains = {
@@ -342,7 +349,7 @@ func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terra
 ## [/codeblock]
 ## If [param connect] is [code]true[/code], cells will be connected
 ## to surrounding cells of the same [param terrain_set], and the update may be
-## expanded up to the [member maximum_update_size]. See [member maximum_update_size] for details.
+## expanded up to the [member maximum_update_size].
 ## See [method set_cells_terrain_connect].
 ## [br][br]
 ## If [param connect] is [code]false[/code], no surrounding cells will be updated.
@@ -361,13 +368,13 @@ func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : 
 
 
 
-## Updates all the existing terrain tiles on a given [param layer].
-## [param terrain_set] has a default value of [member NULL_TERRAIN_SET].
-## If [param terrain_set] is set to the index of a valid terrain set,
+## Recalculates and updates all the existing terrain tiles on a given [param layer].
+## If [param terrain_set] is the index of a valid terrain set,
 ## only tiles belonging to that terrain set will be updated.
 ## Otherwise, tiles of all terrain sets will be updated.
+## By default, [param terrain_set] is set to [member NULL_TERRAIN_SET].
 ## [br][br]
-## To assign new terrains to cells on an entire layer, use [method set_cells_terrains].
+## To assign [i]new[/i] terrains to an entire layer, use [method set_cells_terrains].
 func update_terrain_tiles(layer : int, terrain_set := NULL_TERRAIN_SET) -> void:
 	if not is_instance_valid(_tile_map):
 		printerr("TileMap is not a valid instance")
@@ -383,7 +390,7 @@ func update_terrain_tiles(layer : int, terrain_set := NULL_TERRAIN_SET) -> void:
 func _update_terrain_set_tiles(layer : int, terrain_set : int) -> void:
 	var terrains_data := _get_terrains_data(terrain_set)
 	var tiles_updater := _TilesUpdater.new(_tile_map, layer, terrains_data, _cell_logging)
-	_last_update_result = tiles_updater.update_terrain_tiles(EMPTY_RECT)
+	_last_update_result = tiles_updater.update_terrain_tiles(_EMPTY_RECT)
 
 
 func _on_tile_set_changed() -> void:

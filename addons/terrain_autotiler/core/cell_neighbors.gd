@@ -59,10 +59,10 @@ const FullSetPatternCounts := {
 		Autotiler.MatchMode.FULL: 255,
 	},
 	TileSet.TERRAIN_MODE_MATCH_CORNERS: {
-		Autotiler.DEFAULT_MATCH_MODE: 15,
+		Autotiler._DEFAULT_MATCH_MODE: 15,
 	},
 	TileSet.TERRAIN_MODE_MATCH_SIDES: {
-		Autotiler.DEFAULT_MATCH_MODE: 15,
+		Autotiler._DEFAULT_MATCH_MODE: 15,
 	},
 }
 
@@ -135,7 +135,7 @@ const PeeringBitCellNeighbors := {
 				},
 			},
 			TileSet.TERRAIN_MODE_MATCH_CORNERS: {
-				Autotiler.DEFAULT_MATCH_MODE: {
+				Autotiler._DEFAULT_MATCH_MODE: {
 					TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER: {
 						TileSet.CELL_NEIGHBOR_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER,
 						TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER: TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER,
@@ -159,7 +159,7 @@ const PeeringBitCellNeighbors := {
 				},
 			},
 			TileSet.TERRAIN_MODE_MATCH_SIDES: {
-				Autotiler.DEFAULT_MATCH_MODE: {
+				Autotiler._DEFAULT_MATCH_MODE: {
 					TileSet.CELL_NEIGHBOR_RIGHT_SIDE: {
 						TileSet.CELL_NEIGHBOR_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_LEFT_SIDE,
 					},
@@ -241,7 +241,7 @@ const PeeringBitCellNeighbors := {
 				},
 			},
 			TileSet.TERRAIN_MODE_MATCH_CORNERS: {
-				Autotiler.DEFAULT_MATCH_MODE: {
+				Autotiler._DEFAULT_MATCH_MODE: {
 					TileSet.CELL_NEIGHBOR_RIGHT_CORNER: {
 						TileSet.CELL_NEIGHBOR_TOP_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_BOTTOM_CORNER,
 						TileSet.CELL_NEIGHBOR_RIGHT_CORNER: TileSet.CELL_NEIGHBOR_LEFT_CORNER,
@@ -265,7 +265,7 @@ const PeeringBitCellNeighbors := {
 				},
 			},
 			TileSet.TERRAIN_MODE_MATCH_SIDES: {
-				Autotiler.DEFAULT_MATCH_MODE: {
+				Autotiler._DEFAULT_MATCH_MODE: {
 					TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE: {
 						TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_TOP_LEFT_SIDE,
 					},
@@ -285,7 +285,7 @@ const PeeringBitCellNeighbors := {
 	TileSet.TILE_SHAPE_HEXAGON: {
 		TileSet.TILE_OFFSET_AXIS_HORIZONTAL: {
 			TileSet.TERRAIN_MODE_MATCH_CORNERS_AND_SIDES: {
-				Autotiler.DEFAULT_MATCH_MODE: {
+				Autotiler._DEFAULT_MATCH_MODE: {
 					TileSet.CELL_NEIGHBOR_RIGHT_SIDE: {
 						TileSet.CELL_NEIGHBOR_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_LEFT_SIDE,
 					},
@@ -331,7 +331,7 @@ const PeeringBitCellNeighbors := {
 				},
 			},
 			TileSet.TERRAIN_MODE_MATCH_CORNERS: {
-				Autotiler.DEFAULT_MATCH_MODE: {
+				Autotiler._DEFAULT_MATCH_MODE: {
 					TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER: {
 						TileSet.CELL_NEIGHBOR_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER,
 						TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_TOP_CORNER,
@@ -359,7 +359,7 @@ const PeeringBitCellNeighbors := {
 				},
 			},
 			TileSet.TERRAIN_MODE_MATCH_SIDES: {
-				Autotiler.DEFAULT_MATCH_MODE: {
+				Autotiler._DEFAULT_MATCH_MODE: {
 					TileSet.CELL_NEIGHBOR_RIGHT_SIDE: {
 						TileSet.CELL_NEIGHBOR_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_LEFT_SIDE,
 					},
@@ -383,7 +383,7 @@ const PeeringBitCellNeighbors := {
 		},
 		TileSet.TILE_OFFSET_AXIS_VERTICAL: {
 			TileSet.TERRAIN_MODE_MATCH_CORNERS_AND_SIDES: {
-				Autotiler.DEFAULT_MATCH_MODE: {
+				Autotiler._DEFAULT_MATCH_MODE: {
 					TileSet.CELL_NEIGHBOR_RIGHT_CORNER: {
 						TileSet.CELL_NEIGHBOR_TOP_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER,
 						TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER,
@@ -429,7 +429,7 @@ const PeeringBitCellNeighbors := {
 				},
 			},
 			TileSet.TERRAIN_MODE_MATCH_CORNERS: {
-				Autotiler.DEFAULT_MATCH_MODE: {
+				Autotiler._DEFAULT_MATCH_MODE: {
 					TileSet.CELL_NEIGHBOR_RIGHT_CORNER: {
 						TileSet.CELL_NEIGHBOR_TOP_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER,
 						TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER,
@@ -457,7 +457,7 @@ const PeeringBitCellNeighbors := {
 				},
 			},
 			TileSet.TERRAIN_MODE_MATCH_SIDES: {
-				Autotiler.DEFAULT_MATCH_MODE: {
+				Autotiler._DEFAULT_MATCH_MODE: {
 					TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE: {
 						TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_SIDE: TileSet.CELL_NEIGHBOR_TOP_LEFT_SIDE,
 					},
@@ -522,7 +522,7 @@ var match_mode : Autotiler.MatchMode
 #		var neighbor_bit := cn.get_peering_bit_cell_neighbor_peering_bit(bit, neighbor)
 
 
-func _init(p_tile_shape : TileSet.TileShape, p_terrain_mode : TileSet.TerrainMode, p_match_mode := Autotiler.DEFAULT_MATCH_MODE, p_tile_offset_axis := DEFAULT_OFFSET_AXIS) -> void:
+func _init(p_tile_shape : TileSet.TileShape, p_terrain_mode : TileSet.TerrainMode, p_match_mode := Autotiler._DEFAULT_MATCH_MODE, p_tile_offset_axis := DEFAULT_OFFSET_AXIS) -> void:
 	tile_shape = p_tile_shape
 	terrain_mode = p_terrain_mode
 
@@ -531,7 +531,7 @@ func _init(p_tile_shape : TileSet.TileShape, p_terrain_mode : TileSet.TerrainMod
 	if p_terrain_mode == TileSet.TERRAIN_MODE_MATCH_CORNERS_AND_SIDES:
 		match_mode = p_match_mode
 	else:
-		match_mode = Autotiler.DEFAULT_MATCH_MODE
+		match_mode = Autotiler._DEFAULT_MATCH_MODE
 
 	if p_tile_shape == TileSet.TILE_SHAPE_HEXAGON:
 		tile_offset_axis = p_tile_offset_axis

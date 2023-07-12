@@ -27,7 +27,7 @@ func setup(p_tile_set : TileSet, p_terrain_set : int, p_tile_terrain : int) -> v
 
 	for peering_terrain in tile_set.get_terrains_count(terrain_set):
 		var peering_terrain_name := tile_set.get_terrain_name(terrain_set, peering_terrain)
-		if peering_terrain_name == Autotiler.IGNORE_TERRAIN_NAME:
+		if peering_terrain_name == Autotiler._IGNORE_TERRAIN_NAME:
 			continue
 		var peering_terrain_color := tile_set.get_terrain_color(terrain_set, peering_terrain)
 
