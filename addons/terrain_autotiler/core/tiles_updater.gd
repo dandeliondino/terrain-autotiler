@@ -655,6 +655,9 @@ func _assign_complex_patterns(p_cells : Array[Vector2i], p_test_neighbor_complex
 
 		if not success:
 			var is_match_possible := _is_match_possible(coords)
+			if cell_logging:
+				result.add_cell_log(coords, ["_assign_matching_pattern() not successful", "is_match_possible=%s" % is_match_possible])
+
 			if is_match_possible:
 				var backtrack_result := _backtrack_at_coords(coords)
 				if backtrack_result["success"] == false:
@@ -664,6 +667,7 @@ func _assign_complex_patterns(p_cells : Array[Vector2i], p_test_neighbor_complex
 					# re-add the neighbors patterns we just cleared
 					# but don't bother checking or adding other neighbors
 					# if coords does not have a pattern assigned
+					_non_matching_cells_set[coords] = true
 					next_cells.append_array(backtrack_result["neighbors_needing_new_patterns"])
 					result.add_cell_error(coords, UpdateResult.CellError.NO_PATTERN_FOUND)
 					continue
@@ -870,6 +874,9 @@ func _assign_simple_patterns(p_cells : Array[Vector2i]) -> bool:
 
 		if not success:
 			var is_match_possible := _is_match_possible(coords)
+			if cell_logging:
+				result.add_cell_log(coords, ["_assign_simple_patterns -> assign_matching_pattern() unsuccessful", "is_match_possible=%s" % is_match_possible])
+
 			if _expanded_update_available && is_match_possible:
 				# exit and restart with larger update area
 				result.add_cell_warning(coords, UpdateResult.CellError.NO_PATTERN_FOUND)
