@@ -258,6 +258,52 @@ static func get_primary_peering_terrain(tile_set : TileSet, terrain_set : int, t
 	return _Metadata.get_primary_peering_terrain(tile_set, terrain_set, tile_terrain)
 
 
+# -----------------------------------------------------------------------------
+#	CELL NEIGHBOR FUNCTIONS
+# -----------------------------------------------------------------------------
+# using untyped arrays as return values as typed arrays are not yet fully implemented,
+# so may be cause unexpected errors
+
+## [i]Static.[/i] Returns [Array] of [enum TileSet.CellNeighbor] values based on
+## tile shape, offset axis, and terrain set mode. Includes only neighbors with
+## overlapping peering bits. For example, for [member TileSet.TERRAIN_MODE_MATCH_SIDES],
+## will return only the sides neighbors.
+## If the [param tile_map] or [param terrain_set] are invalid, will
+## return an empty array.
+## See also: [method get_all_cell_neighbor_coordinates].
+static func get_all_cell_neighbors(tile_map : TileMap, terrain_set : int) -> Array:
+	if not is_instance_valid(tile_map):
+		return []
+	var tile_set := tile_map.tile_set
+	if not is_instance_valid(tile_set):
+		return []
+	if not terrain_set >= 0 or not terrain_set < tile_set.get_terrain_sets_count():
+		# invalid terrain set
+		return []
+	var cn := _CellNeighbors.new(
+		tile_set.tile_shape,
+		tile_set.get_terrain_set_mode(terrain_set),
+		_DEFAULT_MATCH_MODE,
+		tile_set.tile_offset_axis)
+	return cn.get_all_peering_bit_cell_neighbors()
+
+
+## [i]Static.[/i] Returns [Array] of [Vector2i] cell coordinates.
+## Includes only the neighbors with overlapping peering bits.
+## For example, for [member TileSet.TERRAIN_MODE_MATCH_SIDES],
+## will return only the sides neighbors.
+## If the [param tile_map] or [param terrain_set] are invalid, will
+## return an empty array.
+## See also: [method get_all_cell_neighbors].
+static func get_all_cell_neighbor_coordinates(tile_map : TileMap, terrain_set : int, coords : Vector2i) -> Array:
+	var coords_array := []
+	for neighbor in get_all_cell_neighbors(tile_map, terrain_set):
+		var neighbor_coords := tile_map.get_neighbor_cell(coords, neighbor)
+		coords_array.append(neighbor_coords)
+	return coords_array
+
+
+
 
 
 
