@@ -26,6 +26,10 @@ const SearchPattern := preload("res://addons/terrain_autotiler/core/search_patte
 const UpdateResult := preload("res://addons/terrain_autotiler/core/update_result.gd")
 const TileLocation := preload("res://addons/terrain_autotiler/core/tile_location.gd")
 
+#const UpdateCreator := preload("res://addons/terrain_autotiler/core/updater/update_creator.gd")
+#const PatternAssigner := preload("res://addons/terrain_autotiler/core/updater/pattern_assigner.gd")
+#const TilesPlacer := preload("res://addons/terrain_autotiler/core/updater/tiles_placer.gd")
+
 
 var tile_map : TileMap
 var layer : int
@@ -63,6 +67,7 @@ var _update_cells : Array[Vector2i] = []
 
 var _non_matching_cells_set := {}
 
+var update : Dictionary
 
 # this is a lot of arguments, and using TileUpdater means calling 2 functions
 # might be better to have a UpdateRequest object to store these params,

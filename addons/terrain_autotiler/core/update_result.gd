@@ -86,6 +86,7 @@ var cell_pattern_types := {}
 var cell_update_indexes := {}
 var cell_logs := {}
 
+
 var terrains_data : TerrainsData
 var bit_template : String
 

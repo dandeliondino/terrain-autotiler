@@ -27,7 +27,32 @@ extends RefCounted
 ## @tutorial(Wiki):            https://github.com/dandeliondino/terrain-autotiler/wiki
 
 
+enum TA_Error {
+	OK=0,
+	INVALID_AUTOTILER,
+	INVALID_TILE_MAP,
+	INVALID_TILE_SET,
+	INVALID_LAYER,
+	INVALID_TERRAINS_DATA,
+	EMPTY_UPDATE,
+	INVALID_TERRAIN,
+	INVALID_CELLS,
+}
 
+const _ErrorTexts := {
+	TA_Error.OK: "OK",
+	TA_Error.INVALID_TILE_MAP: "INVALID_TILE_MAP",
+	TA_Error.INVALID_TILE_SET: "INVALID_TILE_SET",
+	TA_Error.INVALID_LAYER: "INVALID_LAYER",
+	TA_Error.INVALID_TERRAINS_DATA: "INVALID_TERRAINS_DATA",
+}
+
+enum MatchMode {
+	MINIMAL = 0,
+	FULL = 1,
+}
+
+const _DEFAULT_MATCH_MODE := MatchMode.MINIMAL
 
 
 const _PLUGIN_NAME := "TERRAIN_AUTOTILER"
@@ -43,12 +68,9 @@ const NULL_TERRAIN := -99
 const EMPTY_TERRAIN := -1
 const _EMPTY_RECT := Rect2i()
 
-enum MatchMode {
-	MINIMAL = 0,
-	FULL = 1,
-}
 
-const _DEFAULT_MATCH_MODE := MatchMode.MINIMAL
+
+
 
 
 const _UpdateResult := preload("res://addons/terrain_autotiler/core/update_result.gd")
@@ -56,6 +78,7 @@ const _Metadata := preload("res://addons/terrain_autotiler/core/metadata.gd")
 const _CellNeighbors := preload("res://addons/terrain_autotiler/core/cell_neighbors.gd")
 const _TerrainsData := preload("res://addons/terrain_autotiler/core/terrains_data.gd")
 const _TilesUpdater := preload("res://addons/terrain_autotiler/core/tiles_updater.gd")
+const _Update := preload("res://addons/terrain_autotiler/core/updater/update.gd")
 
 var _tile_map : TileMap
 var _tile_set : TileSet
@@ -107,17 +130,41 @@ var _last_update_result : _UpdateResult
 ## [url=https://github.com/dandeliondino/terrain-autotiler/issues/1]Handling Local Non-Matching Tiles when Matching Solutions May Exist[/url].
 var maximum_update_size := Vector2i(64,64)
 
+
+var _last_error := TA_Error.OK
+
+
+
 var _cell_logging := false
 
 
 func _init(p_tile_map : TileMap) -> void:
 	_tile_map = p_tile_map
+	if not _validate_tile_map():
+		return
 	update_terrains_data()
 	_tile_map.changed.connect(_verify_tile_set)
 
 
+func _validate_tile_map() -> bool:
+	if not is_instance_valid(_tile_map) or _tile_map.is_queued_for_deletion():
+		_last_error = TA_Error.INVALID_TILE_MAP
+		return false
+	return true
+
+
+func is_valid() -> bool:
+	return _validate_tile_map()
+
+
+func get_error() -> Autotiler.TA_Error:
+	return _last_error
+
 
 func _verify_tile_set() -> void:
+	if not is_valid():
+		return
+
 	if _tile_set == _tile_map.tile_set:
 		return
 
@@ -146,6 +193,8 @@ func _queue_terrains_data_update() -> void:
 	_terrains_data_update_queued = true
 
 
+
+
 ## Manually reloads the [TileSet] terrains data and updates calculations
 ## for the matching algorithm.
 ## This cached data is automatically queued for update
@@ -167,7 +216,7 @@ func update_terrains_data() -> void:
 	_terrains_data_update_queued = false
 	_terrain_datas.clear()
 
-	if not is_instance_valid(_tile_map):
+	if not is_valid():
 		return
 
 	_Metadata.validate_metadata(_tile_map)
@@ -176,11 +225,13 @@ func update_terrains_data() -> void:
 
 	_tile_set = _tile_map.tile_set
 	if not _tile_set:
+		_last_error = TA_Error.INVALID_TILE_SET
 		return
 
 	if not _tile_set.changed.is_connected(_on_tile_set_changed):
 		_tile_set.changed.connect(_on_tile_set_changed)
 
+	_terrain_datas.clear()
 	for terrain_set in _tile_set.get_terrain_sets_count():
 		_terrain_datas[terrain_set] = _TerrainsData.new(_tile_set, terrain_set)
 
@@ -318,6 +369,7 @@ static func get_all_cell_neighbor_coordinates(tile_map : TileMap, terrain_set : 
 
 
 
+
 ## Updates all the cells in the [param cells] array of [Vector2i] coordinates with tiles
 ## of the provided [param terrain_set] and [param terrain]. Updates surrounding cells
 ## of the same [param terrain_set], and the update may be expanded up to the [member maximum_update_size].
@@ -332,19 +384,47 @@ static func get_all_cell_neighbor_coordinates(tile_map : TileMap, terrain_set : 
 ## [br][br]
 ## See also [method set_cells_terrain_path] and [method set_cells_terrains].
 func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, terrain : int) -> void:
-	if not is_instance_valid(_tile_map):
-		printerr("TileMap is not a valid instance")
+	if not is_valid():
 		return
-	var terrains_data := _get_terrains_data(terrain_set)
-	var tiles_updater := _TilesUpdater.new(_tile_map, layer, terrains_data, _cell_logging)
-	var typed_cells : Array[Vector2i] = []
-	typed_cells.assign(cells)
-	_last_update_result = tiles_updater.paint_single_terrain(
-		typed_cells,
-		terrain,
-		true,
-		maximum_update_size,
-	)
+
+	var update := _Update.new()
+
+	_last_error = update.setup(
+			_tile_map,
+			layer,
+			_get_terrains_data(terrain_set),
+			_Update.Scope.NEIGHBORS,
+			maximum_update_size,
+			_cell_logging,
+		)
+	if _last_error:
+		_push_error(_last_error)
+		return
+
+	_last_error = update.add_painted_cells_list(cells, terrain)
+	if _last_error:
+		_push_error(_last_error)
+		return
+
+
+
+#	_last_update_result = tiles_updater.paint_single_terrain(
+#		typed_cells,
+#		terrain,
+#		true,
+#		maximum_update_size,
+#	)
+
+func _push_error(p_error : Autotiler.TA_Error) -> void:
+	var text : String
+	var error_text := _ErrorTexts.get(p_error, "")
+	if error_text:
+		text = "Autotiler TA_Error: %s (%s)" % [p_error, error_text]
+	else:
+		text = "Autotiler TA_Error: %s" % [p_error]
+	print_debug(text)
+
+
 
 ## Updates all the cells in the [param cells] array of [Vector2i] coordinates with tiles
 ## of the provided [param terrain_set] and [param terrain]. Does not update any surrounding cells.
@@ -361,19 +441,27 @@ func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, te
 ## [br][br]
 ## See also [method set_cells_terrain_connect] and [method set_cells_terrains].
 func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terrain : int) -> void:
-	if not is_instance_valid(_tile_map):
-		printerr("TileMap is not a valid instance")
+	if not is_valid():
 		return
-	var terrains_data := _get_terrains_data(terrain_set)
-	var tiles_updater := _TilesUpdater.new(_tile_map, layer, terrains_data, _cell_logging)
-	var typed_cells : Array[Vector2i] = []
-	typed_cells.assign(cells)
-	_last_update_result = tiles_updater.paint_single_terrain(
-		typed_cells,
-		terrain,
-		false,
-		maximum_update_size,
-	)
+
+	var update := _Update.new()
+
+	_last_error = update.setup(
+			_tile_map,
+			layer,
+			_get_terrains_data(terrain_set),
+			_Update.Scope.PAINTED,
+			maximum_update_size,
+			_cell_logging,
+		)
+	if _last_error:
+		_push_error(_last_error)
+		return
+
+	_last_error = update.add_painted_cells_list(cells, terrain)
+	if _last_error:
+		_push_error(_last_error)
+		return
 
 ## Updates cells according to the provided [param cells_terrains] dictionary
 ## with [Vector2i] [b]coordinates[/b] as keys and [int] [b]terrains[/b] as values.
@@ -401,16 +489,27 @@ func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terra
 ## If [param connect] is [code]false[/code], no surrounding cells will be updated.
 ## See [method set_cells_terrain_path].
 func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : int, connect : bool) -> void:
-	if not is_instance_valid(_tile_map):
-		printerr("TileMap is not a valid instance")
+	if not is_valid():
 		return
-	var terrains_data := _get_terrains_data(terrain_set)
-	var tiles_updater := _TilesUpdater.new(_tile_map, layer, terrains_data, _cell_logging)
-	_last_update_result = tiles_updater.paint_multiple_terrains(
-		cells_terrains,
-		connect,
-		maximum_update_size,
-	)
+
+	var update := _Update.new()
+
+	_last_error = update.setup(
+			_tile_map,
+			layer,
+			_get_terrains_data(terrain_set),
+			_Update.Scope.PAINTED,
+			maximum_update_size,
+			_cell_logging,
+		)
+	if _last_error:
+		_push_error(_last_error)
+		return
+
+	_last_error = update.add_painted_cells_dict(cells_terrains)
+	if _last_error:
+		_push_error(_last_error)
+		return
 
 
 
@@ -422,9 +521,9 @@ func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : 
 ## [br][br]
 ## To assign [i]new[/i] terrains to an entire layer, use [method set_cells_terrains].
 func update_terrain_tiles(layer : int, terrain_set := NULL_TERRAIN_SET) -> void:
-	if not is_instance_valid(_tile_map):
-		printerr("TileMap is not a valid instance")
+	if not is_valid():
 		return
+
 	if terrain_set != NULL_TERRAIN_SET:
 		_update_terrain_set_tiles(layer, terrain_set)
 		return
@@ -434,9 +533,23 @@ func update_terrain_tiles(layer : int, terrain_set := NULL_TERRAIN_SET) -> void:
 
 
 func _update_terrain_set_tiles(layer : int, terrain_set : int) -> void:
-	var terrains_data := _get_terrains_data(terrain_set)
-	var tiles_updater := _TilesUpdater.new(_tile_map, layer, terrains_data, _cell_logging)
-	_last_update_result = tiles_updater.update_terrain_tiles(_EMPTY_RECT)
+	if not is_valid():
+		return
+
+	var update := _Update.new()
+
+	_last_error = update.setup(
+			_tile_map,
+			layer,
+			_get_terrains_data(terrain_set),
+			_Update.Scope.LAYER,
+			maximum_update_size,
+			_cell_logging,
+		)
+	if _last_error:
+		_push_error(_last_error)
+		return
+
 
 
 func _on_tile_set_changed() -> void:
