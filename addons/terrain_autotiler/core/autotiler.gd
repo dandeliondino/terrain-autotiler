@@ -78,16 +78,18 @@ const _Metadata := preload("res://addons/terrain_autotiler/core/metadata.gd")
 const _CellNeighbors := preload("res://addons/terrain_autotiler/core/cell_neighbors.gd")
 const _TerrainsData := preload("res://addons/terrain_autotiler/core/terrains_data.gd")
 const _TilesUpdater := preload("res://addons/terrain_autotiler/core/tiles_updater.gd")
-const _Update := preload("res://addons/terrain_autotiler/core/updater/update.gd")
+const _Request := preload("res://addons/terrain_autotiler/core/updater/request.gd")
 
 var _tile_map : TileMap
 var _tile_set : TileSet
 var _terrain_datas := {}
+var _cell_logging := false
 
 var _defer_data_updates := true
 var _terrains_data_update_queued := false
 
 var _last_update_result : _UpdateResult
+
 
 ## For updates in connect mode, determines the maximum size in cells an update can expand to when needed.
 ## If smaller than the original update size, no expansion will occur.
@@ -131,11 +133,7 @@ var _last_update_result : _UpdateResult
 var maximum_update_size := Vector2i(64,64)
 
 
-var _last_error := TA_Error.OK
 
-
-
-var _cell_logging := false
 
 
 func _init(p_tile_map : TileMap) -> void:
@@ -148,17 +146,12 @@ func _init(p_tile_map : TileMap) -> void:
 
 func _validate_tile_map() -> bool:
 	if not is_instance_valid(_tile_map) or _tile_map.is_queued_for_deletion():
-		_last_error = TA_Error.INVALID_TILE_MAP
 		return false
 	return true
 
 
 func is_valid() -> bool:
 	return _validate_tile_map()
-
-
-func get_error() -> Autotiler.TA_Error:
-	return _last_error
 
 
 func _verify_tile_set() -> void:
@@ -225,7 +218,6 @@ func update_terrains_data() -> void:
 
 	_tile_set = _tile_map.tile_set
 	if not _tile_set:
-		_last_error = TA_Error.INVALID_TILE_SET
 		return
 
 	if not _tile_set.changed.is_connected(_on_tile_set_changed):
@@ -383,28 +375,30 @@ static func get_all_cell_neighbor_coordinates(tile_map : TileMap, terrain_set : 
 ## See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler: Additional Features[/url].
 ## [br][br]
 ## See also [method set_cells_terrain_path] and [method set_cells_terrains].
-func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, terrain : int) -> void:
+func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, terrain : int) -> Error:
 	if not is_valid():
-		return
+		return Error.FAILED
 
-	var update := _Update.new()
+	var request := _Request.new()
 
-	_last_error = update.setup(
+	var error : TA_Error = request.setup(
 			_tile_map,
 			layer,
 			_get_terrains_data(terrain_set),
-			_Update.Scope.NEIGHBORS,
+			_Request.Scope.NEIGHBORS,
 			maximum_update_size,
 			_cell_logging,
 		)
-	if _last_error:
-		_push_error(_last_error)
-		return
+	if error:
+		_push_error(error)
+		return Error.FAILED
 
-	_last_error = update.add_painted_cells_list(cells, terrain)
-	if _last_error:
-		_push_error(_last_error)
-		return
+	error = request.add_painted_cells_list(cells, terrain)
+	if error:
+		_push_error(error)
+		return Error.FAILED
+
+	return Error.OK
 
 
 
@@ -419,10 +413,10 @@ func _push_error(p_error : Autotiler.TA_Error) -> void:
 	var text : String
 	var error_text := _ErrorTexts.get(p_error, "")
 	if error_text:
-		text = "Autotiler TA_Error: %s (%s)" % [p_error, error_text]
+		text = "Autotiler Error: %s (%s)" % [p_error, error_text]
 	else:
-		text = "Autotiler TA_Error: %s" % [p_error]
-	print_debug(text)
+		text = "Autotiler Error: %s" % [p_error]
+	push_warning(text)
 
 
 
@@ -440,28 +434,30 @@ func _push_error(p_error : Autotiler.TA_Error) -> void:
 ## See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler: Additional Features[/url].
 ## [br][br]
 ## See also [method set_cells_terrain_connect] and [method set_cells_terrains].
-func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terrain : int) -> void:
+func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terrain : int) -> Error:
 	if not is_valid():
-		return
+		return Error.FAILED
 
-	var update := _Update.new()
+	var request := _Request.new()
 
-	_last_error = update.setup(
+	var error : TA_Error = request.setup(
 			_tile_map,
 			layer,
 			_get_terrains_data(terrain_set),
-			_Update.Scope.PAINTED,
+			_Request.Scope.PAINTED,
 			maximum_update_size,
 			_cell_logging,
 		)
-	if _last_error:
-		_push_error(_last_error)
-		return
+	if error:
+		_push_error(error)
+		return Error.FAILED
 
-	_last_error = update.add_painted_cells_list(cells, terrain)
-	if _last_error:
-		_push_error(_last_error)
-		return
+	error = request.add_painted_cells_list(cells, terrain)
+	if error:
+		_push_error(error)
+		return Error.FAILED
+
+	return Error.OK
 
 ## Updates cells according to the provided [param cells_terrains] dictionary
 ## with [Vector2i] [b]coordinates[/b] as keys and [int] [b]terrains[/b] as values.
@@ -488,28 +484,30 @@ func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terra
 ## [br][br]
 ## If [param connect] is [code]false[/code], no surrounding cells will be updated.
 ## See [method set_cells_terrain_path].
-func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : int, connect : bool) -> void:
+func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : int, connect : bool) -> Error:
 	if not is_valid():
-		return
+		return Error.FAILED
 
-	var update := _Update.new()
+	var request := _Request.new()
 
-	_last_error = update.setup(
+	var error : TA_Error = request.setup(
 			_tile_map,
 			layer,
 			_get_terrains_data(terrain_set),
-			_Update.Scope.PAINTED,
+			_Request.Scope.PAINTED,
 			maximum_update_size,
 			_cell_logging,
 		)
-	if _last_error:
-		_push_error(_last_error)
-		return
+	if error:
+		_push_error(error)
+		return Error.FAILED
 
-	_last_error = update.add_painted_cells_dict(cells_terrains)
-	if _last_error:
-		_push_error(_last_error)
-		return
+	error = request.add_painted_cells_dict(cells_terrains)
+	if error:
+		_push_error(error)
+		return Error.FAILED
+
+	return Error.OK
 
 
 
@@ -520,35 +518,40 @@ func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : 
 ## By default, [param terrain_set] is set to [member NULL_TERRAIN_SET].
 ## [br][br]
 ## To assign [i]new[/i] terrains to an entire layer, use [method set_cells_terrains].
-func update_terrain_tiles(layer : int, terrain_set := NULL_TERRAIN_SET) -> void:
+func update_terrain_tiles(layer : int, terrain_set := NULL_TERRAIN_SET) -> Error:
 	if not is_valid():
-		return
+		return Error.FAILED
 
 	if terrain_set != NULL_TERRAIN_SET:
-		_update_terrain_set_tiles(layer, terrain_set)
-		return
+		var error := _update_terrain_set_tiles(layer, terrain_set)
+		if error:
+			return Error.FAILED
+		return Error.OK
 
 	for terrain_set_idx in _tile_map.tile_set.get_terrain_sets_count():
-		_update_terrain_set_tiles(layer, terrain_set_idx)
+		var error := _update_terrain_set_tiles(layer, terrain_set_idx)
+	return Error.OK
 
 
-func _update_terrain_set_tiles(layer : int, terrain_set : int) -> void:
+func _update_terrain_set_tiles(layer : int, terrain_set : int) -> Error:
 	if not is_valid():
-		return
+		return Error.FAILED
 
-	var update := _Update.new()
+	var request := _Request.new()
 
-	_last_error = update.setup(
+	var error : TA_Error = request.setup(
 			_tile_map,
 			layer,
 			_get_terrains_data(terrain_set),
-			_Update.Scope.LAYER,
+			_Request.Scope.LAYER,
 			maximum_update_size,
 			_cell_logging,
 		)
-	if _last_error:
-		_push_error(_last_error)
-		return
+	if error:
+		_push_error(error)
+		return Error.FAILED
+	return Error.OK
+
 
 
 
