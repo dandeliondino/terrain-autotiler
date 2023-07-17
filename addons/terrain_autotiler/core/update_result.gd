@@ -103,7 +103,9 @@ func assign_next_update_index(p_coords : Vector2i) -> void:
 
 
 
-func _init(p_terrains_data : TerrainsData) -> void:
+func _init(p_terrains_data : TerrainsData = null) -> void:
+	if p_terrains_data == null:
+		return
 	terrains_data = p_terrains_data
 	bit_template = _get_bit_template()
 

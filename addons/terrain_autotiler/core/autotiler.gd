@@ -77,7 +77,7 @@ const _UpdateResult := preload("res://addons/terrain_autotiler/core/update_resul
 const _Metadata := preload("res://addons/terrain_autotiler/core/metadata.gd")
 const _CellNeighbors := preload("res://addons/terrain_autotiler/core/cell_neighbors.gd")
 const _TerrainsData := preload("res://addons/terrain_autotiler/core/terrains_data.gd")
-const _TilesUpdater := preload("res://addons/terrain_autotiler/core/tiles_updater.gd")
+const _TilesUpdater := preload("res://addons/terrain_autotiler/core/updater/tiles_updater.gd")
 const _Request := preload("res://addons/terrain_autotiler/core/updater/request.gd")
 
 var _tile_map : TileMap
@@ -397,6 +397,8 @@ func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, te
 	if error:
 		_push_error(error)
 		return Error.FAILED
+
+	_last_update_result = _TilesUpdater.new().update_tiles(request)
 
 	return Error.OK
 

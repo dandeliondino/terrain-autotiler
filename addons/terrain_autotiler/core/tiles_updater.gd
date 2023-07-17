@@ -1122,7 +1122,7 @@ func _update_map() -> void:
 			continue
 
 		var tile_location := pattern.get_tile()
-		if not tile_location or not tile_location.validate():
+		if not tile_location or tile_location.is_empty():
 			push_error("No valid tile found for pattern")
 			continue
 

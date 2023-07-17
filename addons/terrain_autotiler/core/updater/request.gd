@@ -74,13 +74,9 @@ func add_painted_cells_list(p_cells : Array, p_terrain : int) -> Autotiler.TA_Er
 	var has_locked_cells : bool = (tile_map_locked_cells_set.size() > 0)
 
 	for coords in p_cells:
-		# validate cell
+		# validate cell (don't checked locked here, have to check later anyways)
 		if typeof(coords) != TYPE_VECTOR2I:
 			return Autotiler.TA_Error.INVALID_CELLS
-		if has_locked_cells && tile_map_locked_cells_set.has(coords):
-			# can be added later as a neighbor
-			continue
-
 		painted_cells[coords] = p_terrain
 
 	if painted_cells.size() == 0:
