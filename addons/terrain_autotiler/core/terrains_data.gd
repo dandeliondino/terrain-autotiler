@@ -112,7 +112,7 @@ enum Score {
 const ScoreValues := {
 	Score.PRIMARY : 300,
 	Score.PRIMARY_LOW : 250,
-	Score.IGNORE : 150,
+	Score.IGNORE : 201,
 	Score.HIGH : 200,
 	Score.LOW : 100,
 	Score.MATCHING_BIT : 300,
