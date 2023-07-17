@@ -48,18 +48,34 @@ func load_cells(p_request : Request) -> Dictionary:
 		_add_cells(request.painted_cells.keys(), CellType.PAINTED)
 		if request.scope == Request.Scope.NEIGHBORS:
 			_add_surrounding_cells_to_update()
+			_setup_expanded_update_availability()
 		_add_surrounding_cells_as_neighbors()
-		_setup_expanded_update_availability()
+
 
 	return cells
 
 
 func expand_loaded_cells(p_request : Request, p_cells : Dictionary) -> Dictionary:
+	# TODO: if this is slow, optimizing by using old data
+	# but much simpler to simply re-create the cells dictionary
 	if not p_request or p_cells.is_empty():
 		return {}
 
 	request = p_request
 	var old_cells : Dictionary = p_cells
+
+	_add_cells(request.painted_cells.keys(), CellType.PAINTED)
+
+	var expand_cells := []
+	if old_cells.expand_rect == Autotiler._EMPTY_RECT:
+		# expand to all eligible cells in layer
+		expand_cells = request.tile_map.get_used_cells(request.layer)
+		_add_cells(expand_cells, CellType.UPDATE)
+		_add_surrounding_cells_as_empty_neighbors()
+	else:
+		expand_cells = _get_rect_cells(old_cells.expand_rect)
+		_add_cells(expand_cells, CellType.UPDATE)
+		_add_surrounding_cells_as_neighbors()
 
 	return cells
 
@@ -90,6 +106,7 @@ func _add_surrounding_cells_as_empty_neighbors() -> void:
 	for coords in surrounding_cells:
 		cells.terrains[coords] = EMPTY_TERRAIN
 		cells.patterns[coords] = empty_pattern
+		request.tile_map_locked_cells_set[coords] = true
 		cells.sets.neighbors[coords] = true
 
 
@@ -244,18 +261,36 @@ func _setup_expanded_update_availability() -> void:
 
 	var center_pos : Vector2i = update_rect.get_center()
 	var start_pos : Vector2i = center_pos - max_update_size/2
-	cells.expand_rect = Rect2i(start_pos, max_update_size)
-
-
-
+	var expand_rect := Rect2i(start_pos, max_update_size)
+	# in case of irregular shape, merge with original update
+	cells.expand_rect = update_rect.merge(expand_rect)
 
 
 func _get_eligible_layer_cells_rect() -> Rect2i:
+	var eligible_cells = _get_eligible_layer_cells()
+	return _get_rect_from_cells(eligible_cells)
+
+
+func _get_eligible_layer_cells() -> Array:
+	var tile_map := request.tile_map
+	var layer := request.layer
+	return _get_eligible_expand_cells(tile_map.get_used_cells(layer))
+
+
+func _get_rect_cells(rect : Rect2i) -> Array:
+	var rect_cells := []
+	for x in range(rect.position.x, rect.position.x + rect.size.x):
+		for y in range(rect.position.y, rect.position.y + rect.size.y):
+			rect_cells.append(Vector2i(x,y))
+	return rect_cells
+
+
+func _get_eligible_expand_cells(p_cells : Array) -> Array:
 	var eligible_layer_cells := []
 	var tile_map := request.tile_map
 	var layer := request.layer
 	var terrain_set := request.terrains_data.terrain_set
-	for coords in tile_map.get_used_cells(layer):
+	for coords in p_cells:
 		var tile_data := tile_map.get_cell_tile_data(layer, coords)
 		if not tile_data:
 			continue
@@ -264,8 +299,8 @@ func _get_eligible_layer_cells_rect() -> Rect2i:
 		if tile_data.terrain == EMPTY_TERRAIN:
 			continue
 		eligible_layer_cells.append(coords)
-	print("eligible layer cells=%s" % _get_rect_from_cells(eligible_layer_cells))
-	return _get_rect_from_cells(eligible_layer_cells)
+	return eligible_layer_cells
+
 
 
 
