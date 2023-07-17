@@ -37,14 +37,13 @@ func load_cells(p_request : Request) -> Dictionary:
 	request = p_request
 
 	if request.scope == Request.Scope.LAYER:
-		_add_cells(CellType.UPDATE, request.tile_map.get_used_cells(request.layer))
+		_add_cells(request.tile_map.get_used_cells(request.layer), CellType.UPDATE)
+		_add_surrounding_cells_as_empty_neighbors()
 	else:
-		_add_cells(CellType.PAINTED, request.painted_cells.keys())
+		_add_cells(request.painted_cells.keys(), CellType.PAINTED)
 		if request.scope == Request.Scope.NEIGHBORS:
-			_add_surrounding_cells_to_update(cells.sets.update.keys())
-		# else: scope == PAINTED
-
-	_add_surrounding_cells_as_neighbors(cells.sets.update.keys())
+			_add_surrounding_cells_to_update()
+		_add_surrounding_cells_as_neighbors()
 
 	return cells
 
@@ -62,18 +61,19 @@ func expand_loaded_cells(p_request : Request, p_cells : Dictionary) -> Dictionar
 
 
 
-func _add_surrounding_cells_to_update(p_cells : Array) -> void:
+func _add_surrounding_cells_to_update() -> void:
 	# immediate neighbors
-	var surrounding_cells := _get_surrounding_cells(p_cells, true)
-	_add_cells(CellType.UPDATE, surrounding_cells)
+	var surrounding_cells := _get_surrounding_cells(cells.sets.update.keys(), true)
+	_add_cells(surrounding_cells, CellType.UPDATE)
 	# neighbors two cells away, only needed if immediate neighbor was not empty
-	surrounding_cells = _get_surrounding_cells(surrounding_cells, false)
-	_add_cells(CellType.UPDATE, surrounding_cells)
+	surrounding_cells = _get_surrounding_cells(cells.sets.update.keys(), false)
+	_add_cells(surrounding_cells, CellType.UPDATE)
 
 
-func _add_surrounding_cells_as_neighbors(p_cells : Array) -> void:
-	var surrounding_cells := _get_surrounding_cells(p_cells, false)
-	_add_cells(CellType.NEIGHBOR, surrounding_cells)
+func _add_surrounding_cells_as_neighbors() -> void:
+	var surrounding_cells := _get_surrounding_cells(cells.sets.update.keys(), false)
+	prints("_add_surrounding_cells_as_neighbors()", surrounding_cells)
+	_add_cells(surrounding_cells, CellType.NEIGHBOR)
 
 
 func _add_surrounding_cells_as_empty_neighbors() -> void:
@@ -126,7 +126,7 @@ func _get_surrounding_cells(
 
 
 
-func _add_cells(p_cell_type  : CellType, p_cells : Array) -> void:
+func _add_cells(p_cells : Array, p_cell_type  : CellType) -> void:
 	var tile_map := request.tile_map
 	var layer := request.layer
 	var terrains_data := request.terrains_data
@@ -175,7 +175,7 @@ func _add_cells(p_cell_type  : CellType, p_cells : Array) -> void:
 			cells.sets.neighbors[coords] = true
 			cells.sets.locked[coords] = true
 			cells.patterns[coords] = pattern
-			return
+			continue
 
 		cells.sets.update[coords] = true
 		var neighbors_coords : Array[Vector2i] = []

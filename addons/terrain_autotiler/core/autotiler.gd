@@ -404,13 +404,6 @@ func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, te
 
 
 
-#	_last_update_result = tiles_updater.paint_single_terrain(
-#		typed_cells,
-#		terrain,
-#		true,
-#		maximum_update_size,
-#	)
-
 func _push_error(p_error : Autotiler.TA_Error) -> void:
 	var text : String
 	var error_text := _ErrorTexts.get(p_error, "")
@@ -458,6 +451,8 @@ func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terra
 	if error:
 		_push_error(error)
 		return Error.FAILED
+
+	_last_update_result = _TilesUpdater.new().update_tiles(request)
 
 	return Error.OK
 
@@ -509,6 +504,8 @@ func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : 
 		_push_error(error)
 		return Error.FAILED
 
+	_last_update_result = _TilesUpdater.new().update_tiles(request)
+
 	return Error.OK
 
 
@@ -552,6 +549,9 @@ func _update_terrain_set_tiles(layer : int, terrain_set : int) -> Error:
 	if error:
 		_push_error(error)
 		return Error.FAILED
+
+	_last_update_result = _TilesUpdater.new().update_tiles(request)
+
 	return Error.OK
 
 
