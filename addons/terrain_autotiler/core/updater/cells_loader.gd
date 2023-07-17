@@ -8,6 +8,7 @@ enum CellType {
 
 const NULL_TERRAIN_SET := Autotiler.NULL_TERRAIN_SET
 const EMPTY_TERRAIN := Autotiler.EMPTY_TERRAIN
+const EMPTY_RECT := Autotiler._EMPTY_RECT
 
 const Request := preload("res://addons/terrain_autotiler/core/updater/request.gd")
 const TileLocation := preload("res://addons/terrain_autotiler/core/tile_location.gd")
@@ -26,7 +27,11 @@ var cells := {
 		neighbors = {}, # {coords : true}
 		locked = {}, # {coords : true}
 	},
+	can_expand = false,
+	expand_rect = EMPTY_RECT,
 }
+
+var has_non_empty_neighbors := false
 
 # ---------------------------------------------------------------------------
 
@@ -44,6 +49,7 @@ func load_cells(p_request : Request) -> Dictionary:
 		if request.scope == Request.Scope.NEIGHBORS:
 			_add_surrounding_cells_to_update()
 		_add_surrounding_cells_as_neighbors()
+		_setup_expanded_update_availability()
 
 	return cells
 
@@ -57,9 +63,10 @@ func expand_loaded_cells(p_request : Request, p_cells : Dictionary) -> Dictionar
 
 	return cells
 
+
 # ---------------------------------------------------------------------------
-
-
+#	ADD SURROUNDING CELLS
+# ---------------------------------------------------------------------------
 
 func _add_surrounding_cells_to_update() -> void:
 	# immediate neighbors
@@ -122,8 +129,9 @@ func _get_surrounding_cells(
 
 
 
-
-
+# ---------------------------------------------------------------------------
+#	ADD CELLS
+# ---------------------------------------------------------------------------
 
 
 func _add_cells(p_cells : Array, p_cell_type  : CellType) -> void:
@@ -160,7 +168,7 @@ func _add_cells(p_cells : Array, p_cell_type  : CellType) -> void:
 			if p_cell_type != CellType.PAINTED:
 				# if not painted, add them to the tile_map_locked_cells_set
 				# so we know cannot be replaced in expanded update
-				request.tile_map_locked_cells_set[coords] = true
+				tile_map_locked_cells_set[coords] = true
 				update = false
 		else:
 			var tile_data_pattern := TerrainPattern.new(peering_bits).create_from_tile_data(tile_data)
@@ -175,6 +183,9 @@ func _add_cells(p_cells : Array, p_cell_type  : CellType) -> void:
 			cells.sets.neighbors[coords] = true
 			cells.sets.locked[coords] = true
 			cells.patterns[coords] = pattern
+			if not tile_map_locked_cells_set.has(coords):
+				print("cell=%s, terrain=%s, not in tile_map_locked_cells_set" % [coords, pattern.tile_terrain])
+				has_non_empty_neighbors = true
 			continue
 
 		cells.sets.update[coords] = true
@@ -192,16 +203,81 @@ func _add_cells(p_cells : Array, p_cell_type  : CellType) -> void:
 
 
 
+# ---------------------------------------------------------------------------
+#	SETUP EXPANDED UPDATE ELIGIBILITY
+# ---------------------------------------------------------------------------
+
+# default value is false, so we are assessing if we can change it to true
+# default rect is EMPTY_RECT (=update layer), so we are assessing if it needs
+# to be changed
+func _setup_expanded_update_availability() -> void:
+	if not has_non_empty_neighbors:
+		return
+
+	var max_update_size := request.max_update_size
+
+	if max_update_size == Autotiler.UPDATE_SIZE_NO_EXPANSION:
+		return
+
+	var update_rect := _get_rect_from_cells(cells.sets.update.keys())
+	if max_update_size != Autotiler.UPDATE_SIZE_NO_LIMIT:
+		if max_update_size.x <= update_rect.size.x && max_update_size.y <= update_rect.size.y:
+			# update is already larger than max update size
+			return
+
+
+	var layer_rect := update_rect.merge(_get_eligible_layer_cells_rect())
+	if update_rect == layer_rect:
+		# update already includes all eligible cells in the layer
+		return
+
+	cells.can_expand = true
+
+	if max_update_size == Autotiler.UPDATE_SIZE_NO_LIMIT:
+		# leave expand_rect = EMPTY_RECT so can expand to whole layer
+		return
+
+	if layer_rect.size.x <= max_update_size.x && layer_rect.size.y <= max_update_size.y:
+		# adding all used cells is smaller than max update size,
+		# so update entire layer
+		return
+
+	var center_pos : Vector2i = update_rect.get_center()
+	var start_pos : Vector2i = center_pos - max_update_size/2
+	cells.expand_rect = Rect2i(start_pos, max_update_size)
 
 
 
 
 
+func _get_eligible_layer_cells_rect() -> Rect2i:
+	var eligible_layer_cells := []
+	var tile_map := request.tile_map
+	var layer := request.layer
+	var terrain_set := request.terrains_data.terrain_set
+	for coords in tile_map.get_used_cells(layer):
+		var tile_data := tile_map.get_cell_tile_data(layer, coords)
+		if not tile_data:
+			continue
+		if tile_data.terrain_set != terrain_set:
+			continue
+		if tile_data.terrain == EMPTY_TERRAIN:
+			continue
+		eligible_layer_cells.append(coords)
+	print("eligible layer cells=%s" % _get_rect_from_cells(eligible_layer_cells))
+	return _get_rect_from_cells(eligible_layer_cells)
 
 
 
-
-
+func _get_rect_from_cells(p_cells : Array) -> Rect2i:
+	var min_x := p_cells.reduce(func(min, a): return a.x if (a.x < min) else min, 10000)
+	var max_x := p_cells.reduce(func(max, a): return a.x if (a.x > max) else max, -10000)
+	var min_y := p_cells.reduce(func(min, a): return a.y if (a.y < min) else min, 10000)
+	var max_y := p_cells.reduce(func(max, a): return a.y if (a.y > max) else max, -10000)
+	var pos := Vector2i(min_x, min_y)
+	var end := Vector2i(max_x, max_y)
+	var size := end - pos
+	return Rect2i(pos, size)
 
 
 
