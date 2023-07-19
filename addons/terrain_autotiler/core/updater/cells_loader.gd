@@ -40,6 +40,7 @@ func load_cells(p_request : Request) -> Dictionary:
 		return {}
 
 	request = p_request
+	print("load_cells() max_update_size=%s" % request.max_update_size)
 
 	if request.scope == Request.Scope.LAYER:
 		_add_cells(request.tile_map.get_used_cells(request.layer), CellType.UPDATE)
@@ -240,6 +241,7 @@ func _setup_expanded_update_availability() -> void:
 		return
 
 	var max_update_size := request.max_update_size
+	print("_setup_expanded_update_availability() max update size = %s" % max_update_size)
 
 	if max_update_size == Autotiler.UPDATE_SIZE_NO_EXPANSION:
 		print("_setup_expanded_update_availability() - false - max_update_size == Autotiler.UPDATE_SIZE_NO_EXPANSION")

@@ -42,6 +42,7 @@ func setup(
 	max_update_size = p_max_update_size
 	cell_logging = p_cell_logging
 
+
 	if not is_instance_valid(tile_map) or tile_map.is_queued_for_deletion():
 		return Autotiler.TA_Error.INVALID_TILE_MAP
 	if not is_instance_valid(tile_map.tile_set):
@@ -51,7 +52,7 @@ func setup(
 	if not terrains_data or terrains_data._patterns_by_id.size() == 0:
 		return Autotiler.TA_Error.INVALID_TERRAINS_DATA
 
-	if max_update_size < Vector2i(0,0):
+	if max_update_size < Vector2i(-1,-1):
 		max_update_size = Autotiler.UPDATE_SIZE_NO_EXPANSION
 
 	update_result = UpdateResult.new(terrains_data)

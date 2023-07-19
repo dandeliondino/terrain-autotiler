@@ -234,6 +234,7 @@ func _backtrack_at_coords(p_coords : Vector2i) -> Dictionary:
 
 	if cell_logging:
 		result.add_cell_log(p_coords, "**********\nbacktracking starting here")
+		result.add_cell_warning(p_coords, UpdateResult.CellError.BACKTRACK_PROGENITOR)
 
 	var neighbors_needing_new_patterns := _clear_cells_for_backtracking(p_coords)
 
@@ -300,8 +301,6 @@ func _backtrack_at_coords(p_coords : Vector2i) -> Dictionary:
 			if cell_logging:
 				result.add_cell_log(p_coords, "possible_patterns.is_empty(), expanded update available = %s" % expanded_update_available)
 			if expanded_update_available:
-				if cell_logging:
-					result.add_cell_log(p_coords, "requesting expanded update")
 				backtrack_result["expanded_update_requested"] = true
 				return backtrack_result
 			# else: no expanded update available
@@ -329,6 +328,8 @@ func _clear_cells_for_backtracking(p_coords : Vector2i) -> Array[Vector2i]:
 			continue
 
 		if cells.patterns.has(neighbor_coords):
+			if cell_logging:
+				result.add_cell_log(neighbor_coords, "backtrack neighbor - erasing pattern")
 			cells.patterns.erase(neighbor_coords)
 			neighbors_with_erased_patterns.append(neighbor_coords)
 			for second_neighbor_coords in cells.neighbors_coords[neighbor_coords]:

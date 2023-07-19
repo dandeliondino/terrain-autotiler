@@ -380,6 +380,7 @@ func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, te
 		return Error.FAILED
 
 	var request := _Request.new()
+	print("maximum update size = %s" % maximum_update_size)
 
 	var error : TA_Error = request.setup(
 			_tile_map,
@@ -390,12 +391,12 @@ func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, te
 			_cell_logging,
 		)
 	if error:
-		_push_error(error)
+		_print_error(error)
 		return Error.FAILED
 
 	error = request.add_painted_cells_list(cells, terrain)
 	if error:
-		_push_error(error)
+		_print_error(error)
 		return Error.FAILED
 
 	_last_update_result = _TilesUpdater.new().update_tiles(request)
@@ -404,14 +405,14 @@ func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, te
 
 
 
-func _push_error(p_error : Autotiler.TA_Error) -> void:
+func _print_error(p_error : Autotiler.TA_Error) -> void:
 	var text : String
 	var error_text := _ErrorTexts.get(p_error, "")
 	if error_text:
 		text = "Autotiler Error: %s (%s)" % [p_error, error_text]
 	else:
 		text = "Autotiler Error: %s" % [p_error]
-	push_warning(text)
+	printerr(text)
 
 
 
@@ -444,12 +445,12 @@ func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terra
 			_cell_logging,
 		)
 	if error:
-		_push_error(error)
+		_print_error(error)
 		return Error.FAILED
 
 	error = request.add_painted_cells_list(cells, terrain)
 	if error:
-		_push_error(error)
+		_print_error(error)
 		return Error.FAILED
 
 	_last_update_result = _TilesUpdater.new().update_tiles(request)
@@ -496,12 +497,12 @@ func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : 
 			_cell_logging,
 		)
 	if error:
-		_push_error(error)
+		_print_error(error)
 		return Error.FAILED
 
 	error = request.add_painted_cells_dict(cells_terrains)
 	if error:
-		_push_error(error)
+		_print_error(error)
 		return Error.FAILED
 
 	_last_update_result = _TilesUpdater.new().update_tiles(request)
@@ -547,7 +548,7 @@ func _update_terrain_set_tiles(layer : int, terrain_set : int) -> Error:
 			_cell_logging,
 		)
 	if error:
-		_push_error(error)
+		_print_error(error)
 		return Error.FAILED
 
 	_last_update_result = _TilesUpdater.new().update_tiles(request)
