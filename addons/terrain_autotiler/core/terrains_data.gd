@@ -1,4 +1,3 @@
-@tool
 extends RefCounted
 
 # redefine to avoid lookups
@@ -63,7 +62,7 @@ var ignore_terrain := NULL_TERRAIN
 var ignore_terrain_enabled := false
 var ignore_terrain_substitutes : PackedInt32Array
 
-var single_pattern_terrains : PackedInt32Array = []
+var single_pattern_terrains := {} # {tile_terrain : pattern}
 
 #var profiler := Profiler.new()
 
@@ -112,7 +111,7 @@ enum Score {
 const ScoreValues := {
 	Score.PRIMARY : 300,
 	Score.PRIMARY_LOW : 250,
-	Score.IGNORE : 150,
+	Score.IGNORE : 201,
 	Score.HIGH : 200,
 	Score.LOW : 100,
 	Score.MATCHING_BIT : 300,
@@ -229,9 +228,10 @@ func _load_patterns() -> void:
 		_add_pattern_to_lookup(pattern)
 
 	for tile_terrain in _patterns_by_terrain:
-		var pattern_count : int = _patterns_by_terrain[tile_terrain].size()
+		var patterns : Array = _patterns_by_terrain[tile_terrain]
+		var pattern_count : int = patterns.size()
 		if pattern_count == 1:
-			single_pattern_terrains.append(tile_terrain)
+			single_pattern_terrains[tile_terrain] = patterns[0]
 
 	_populate_primary_patterns()
 	_populate_full_set_tile_terrains()
