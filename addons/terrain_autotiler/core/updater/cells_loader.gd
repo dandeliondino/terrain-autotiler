@@ -114,6 +114,7 @@ func _add_surrounding_cells_as_empty_neighbors() -> void:
 		cells.patterns[coords] = empty_pattern
 		request.tile_map_locked_cells_set[coords] = true
 		cells.sets.neighbors[coords] = true
+		cells.sets.locked[coords] = true
 
 
 
