@@ -1,5 +1,6 @@
 extends RefCounted
 
+const EXPANDED_UPDATE_REQUESTED := Error.ERR_LOCKED
 
 const Request := preload("res://addons/terrain_autotiler/core/updater/request.gd")
 const UpdateResult := preload("res://addons/terrain_autotiler/core/update_result.gd")
@@ -23,7 +24,7 @@ func update_tiles(p_request : Request) -> UpdateResult:
 	request.update_result.start_timer("tiles_updater")
 
 	var error := PatternAssigner.new().assign_patterns(request, cells)
-	if error == PatternAssigner.EXPANDED_UPDATE_REQUESTED:
+	if error == EXPANDED_UPDATE_REQUESTED:
 		# retry with expanded update
 		cells = CellsLoader.new().expand_loaded_cells(request, cells)
 		error = PatternAssigner.new().assign_patterns(request, cells)

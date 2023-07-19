@@ -254,11 +254,6 @@ func _get_bits_text(terrain : int, bit_dict : Dictionary) -> String:
 	return bit_template.format(format_dict)
 
 
-
-
-
-
-
 func _get_bit_template() -> String:
 	var template : String
 	var tile_shape := terrains_data.tile_set.tile_shape
@@ -275,6 +270,25 @@ func _get_bit_template() -> String:
 		template = template.replace(text, id)
 
 	return template
+
+# ---------------------
+# 	SPECIAL CELL LOGS
+# ---------------------
+
+func log_assign_pattern(
+		p_coords : Vector2i,
+		p_pattern : TerrainPattern,
+		p_locked : bool,
+		p_type : PatternType,
+		p_update_index := -99,
+	) -> void:
+
+	if p_update_index == -99:
+		assign_next_update_index(p_coords)
+	else:
+		set_cell_update_index(p_coords, p_update_index)
+	set_cell_pattern_type(p_coords, p_type)
+	add_cell_log(p_coords, [p_pattern, "locked=%s" % str(p_locked)])
 
 
 # ---------------------

@@ -1,21 +1,24 @@
 extends RefCounted
 
 const EMPTY_TERRAIN := Autotiler.EMPTY_TERRAIN
+const STATIC_UPDATE_INDEX := 0
 
 const Request := preload("res://addons/terrain_autotiler/core/updater/request.gd")
 const TerrainPattern := preload("res://addons/terrain_autotiler/core/terrain_pattern.gd")
 const TerrainsData := preload("res://addons/terrain_autotiler/core/terrains_data.gd")
-
+const UpdateResult := preload("res://addons/terrain_autotiler/core/update_result.gd")
 
 var request : Request
 var cells : Dictionary
 var terrains_data : TerrainsData
 var tile_map : TileMap
+var cell_logging : bool
+var result : UpdateResult
 
 var all_peering_bit_neighbors := []
 var cell_unique_neighbor_terrains := {}
 
-# Dictionaries are passed by reference, so no return value needed
+
 func assign_static_patterns(p_request : Request, p_cells : Dictionary) -> Array[Vector2i]:
 	var unassigned_cells : Array[Vector2i] = []
 
@@ -23,10 +26,12 @@ func assign_static_patterns(p_request : Request, p_cells : Dictionary) -> Array[
 		return unassigned_cells
 
 	request = p_request
+	result = request.update_result
 	cells = p_cells
 	terrains_data = request.terrains_data
 	all_peering_bit_neighbors = terrains_data.cn.get_all_peering_bit_cell_neighbors()
 	tile_map = request.tile_map
+	cell_logging = request.cell_logging
 
 	var empty_pattern := request.terrains_data.empty_pattern
 	var single_pattern_terrains := request.terrains_data.single_pattern_terrains
@@ -34,18 +39,51 @@ func assign_static_patterns(p_request : Request, p_cells : Dictionary) -> Array[
 	var cell_primary_patterns := {}
 
 	for coords in cells.sets.update:
-		# assign empty terrains
+		# assign empty patterns
 		var tile_terrain : int = cells.terrains[coords]
 		if tile_terrain == EMPTY_TERRAIN:
 			cells.patterns[coords] = empty_pattern
 			cells.sets.locked[coords] = true
+			if cell_logging:
+				result.log_assign_pattern(
+					coords,
+					empty_pattern,
+					true,
+					UpdateResult.PatternType.STATIC_UPDATE_EMPTY,
+					STATIC_UPDATE_INDEX,
+				)
 			continue
+
+		# assign missing patterns
+		if not terrains_data.tile_terrains.has(tile_terrain):
+			# if terrain wasn't added to tile terrains, it means it has no patterns
+			cells.patterns[coords] = terrains_data.empty_pattern
+			cells.sets.locked[coords] = true
+			result.add_cell_error(coords, UpdateResult.CellError.NO_PATTERN_EXISTS)
+			if cell_logging:
+				result.log_assign_pattern(
+					coords,
+					empty_pattern,
+					true,
+					UpdateResult.PatternType.STATIC_UPDATE_MISSING,
+					STATIC_UPDATE_INDEX,
+				)
+			continue
+
 
 		# assign single-pattern terrains
 		var single_pattern : TerrainPattern = single_pattern_terrains.get(tile_terrain, null)
 		if single_pattern:
 			cells.patterns[coords] = single_pattern
 			cells.sets.locked[coords] = true
+			if cell_logging:
+				result.log_assign_pattern(
+					coords,
+					single_pattern,
+					true,
+					UpdateResult.PatternType.STATIC_UPDATE_SINGLE_PATTERN,
+					STATIC_UPDATE_INDEX,
+				)
 			continue
 
 		# assign primary patterns
@@ -75,6 +113,14 @@ func assign_static_patterns(p_request : Request, p_cells : Dictionary) -> Array[
 	for coords in cell_primary_patterns:
 		cells.patterns[coords] = cell_primary_patterns[coords]
 		cells.sets.locked[coords] = true
+		if cell_logging:
+			result.log_assign_pattern(
+				coords,
+				cell_primary_patterns[coords],
+				true,
+				UpdateResult.PatternType.STATIC_UPDATE_PRIMARY_PATTERN,
+				STATIC_UPDATE_INDEX,
+			)
 
 	return unassigned_cells
 

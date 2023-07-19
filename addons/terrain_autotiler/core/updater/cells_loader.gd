@@ -95,7 +95,7 @@ func _add_surrounding_cells_to_update() -> void:
 
 func _add_surrounding_cells_as_neighbors() -> void:
 	var surrounding_cells := _get_surrounding_cells(cells.sets.update.keys(), false)
-	prints("_add_surrounding_cells_as_neighbors()", surrounding_cells)
+#	prints("_add_surrounding_cells_as_neighbors()", surrounding_cells)
 	_add_cells(surrounding_cells, CellType.NEIGHBOR)
 
 
@@ -201,7 +201,7 @@ func _add_cells(p_cells : Array, p_cell_type  : CellType) -> void:
 			cells.sets.locked[coords] = true
 			cells.patterns[coords] = pattern
 			if not tile_map_locked_cells_set.has(coords):
-				print("cell=%s, terrain=%s, not in tile_map_locked_cells_set" % [coords, pattern.tile_terrain])
+#				print("cell=%s, terrain=%s, not in tile_map_locked_cells_set" % [coords, pattern.tile_terrain])
 				has_non_empty_neighbors = true
 			continue
 
