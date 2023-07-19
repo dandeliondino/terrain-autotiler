@@ -24,6 +24,7 @@ func update_tiles(p_request : Request) -> UpdateResult:
 	request.update_result.start_timer("tiles_updater")
 
 	var error := PatternAssigner.new().assign_patterns(request, cells)
+#	print("PatternAssigner.new().assign_patterns(request, cells) -> %s" % error)
 	if error == EXPANDED_UPDATE_REQUESTED:
 		# retry with expanded update
 		cells = CellsLoader.new().expand_loaded_cells(request, cells)
@@ -31,10 +32,12 @@ func update_tiles(p_request : Request) -> UpdateResult:
 		if error != OK:
 			# can only expand update once,
 			# so any error here should result in exit
+			printerr("Terrain Autotiler: An error occurred.")
 			request.update_result.stop_timer("tiles_updater")
 			return request.update_result
 	elif error != OK:
 		# if any other error, exit
+		printerr("Terrain Autotiler: An error occurred.")
 		request.update_result.stop_timer("tiles_updater")
 		return request.update_result
 
