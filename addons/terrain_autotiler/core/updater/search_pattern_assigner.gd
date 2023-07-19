@@ -47,7 +47,7 @@ func assign_search_patterns(
 	cells = p_cells
 
 	expanded_update_available = cells.can_expand
-	print("expanded_update_available = %s" % cells.can_expand)
+#	print("expanded_update_available = %s" % cells.can_expand)
 
 
 	tile_map = request.tile_map

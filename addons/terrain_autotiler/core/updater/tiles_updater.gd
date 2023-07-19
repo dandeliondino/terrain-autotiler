@@ -17,7 +17,7 @@ func update_tiles(p_request : Request) -> UpdateResult:
 		return UpdateResult.new()
 
 	var request : Request = p_request
-	print("update_tiles() max update size =%s" % request.max_update_size)
+#	print("update_tiles() max update size =%s" % request.max_update_size)
 	var cells : Dictionary = CellsLoader.new().load_cells(request)
 	if cells.is_empty():
 		return request.update_result

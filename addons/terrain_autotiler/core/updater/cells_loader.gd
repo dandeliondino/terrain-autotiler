@@ -40,7 +40,7 @@ func load_cells(p_request : Request) -> Dictionary:
 		return {}
 
 	request = p_request
-	print("load_cells() max_update_size=%s" % request.max_update_size)
+#	print("load_cells() max_update_size=%s" % request.max_update_size)
 
 	if request.scope == Request.Scope.LAYER:
 		_add_cells(request.tile_map.get_used_cells(request.layer), CellType.UPDATE)
@@ -237,41 +237,41 @@ func _add_cells(p_cells : Array, p_cell_type  : CellType) -> void:
 # to be changed
 func _setup_expanded_update_availability() -> void:
 	if not has_non_empty_neighbors:
-		print("_setup_expanded_update_availability() - false - not has_non_empty_neighbors")
+#		print("_setup_expanded_update_availability() - false - not has_non_empty_neighbors")
 		return
 
 	var max_update_size := request.max_update_size
-	print("_setup_expanded_update_availability() max update size = %s" % max_update_size)
+#	print("_setup_expanded_update_availability() max update size = %s" % max_update_size)
 
 	if max_update_size == Autotiler.UPDATE_SIZE_NO_EXPANSION:
-		print("_setup_expanded_update_availability() - false - max_update_size == Autotiler.UPDATE_SIZE_NO_EXPANSION")
+#		print("_setup_expanded_update_availability() - false - max_update_size == Autotiler.UPDATE_SIZE_NO_EXPANSION")
 		return
 
 	var update_rect := _get_rect_from_cells(cells.sets.update.keys())
 	if max_update_size != Autotiler.UPDATE_SIZE_NO_LIMIT:
 		if max_update_size.x <= update_rect.size.x && max_update_size.y <= update_rect.size.y:
 			# update is already larger than max update size
-			print("_setup_expanded_update_availability() - false - update is already larger than max update size")
+#			print("_setup_expanded_update_availability() - false - update is already larger than max update size")
 			return
 
 
 	var layer_rect := update_rect.merge(_get_eligible_layer_cells_rect())
 	if update_rect == layer_rect:
 		# update already includes all eligible cells in the layer
-		print("_setup_expanded_update_availability() - false - update_rect == layer_rect")
+#		print("_setup_expanded_update_availability() - false - update_rect == layer_rect")
 		return
 
 	cells.can_expand = true
 
 	if max_update_size == Autotiler.UPDATE_SIZE_NO_LIMIT:
 		# leave expand_rect = EMPTY_RECT so can expand to whole layer
-		print("_setup_expanded_update_availability() - layer - max_update_size == Autotiler.UPDATE_SIZE_NO_LIMIT")
+#		print("_setup_expanded_update_availability() - layer - max_update_size == Autotiler.UPDATE_SIZE_NO_LIMIT")
 		return
 
 	if layer_rect.size.x <= max_update_size.x && layer_rect.size.y <= max_update_size.y:
 		# adding all used cells is smaller than max update size,
 		# so update entire layer
-		print("_setup_expanded_update_availability() - layer - all used cells is smaller than max update size")
+#		print("_setup_expanded_update_availability() - layer - all used cells is smaller than max update size")
 		return
 
 	var center_pos : Vector2i = update_rect.get_center()
@@ -279,7 +279,7 @@ func _setup_expanded_update_availability() -> void:
 	var expand_rect := Rect2i(start_pos, max_update_size)
 	# in case of irregular shape, merge with original update
 	cells.expand_rect = update_rect.merge(expand_rect)
-	print("_setup_expanded_update_availability() - %s" % expand_rect)
+#	print("_setup_expanded_update_availability() - %s" % expand_rect)
 
 
 func _get_eligible_layer_cells_rect() -> Rect2i:
