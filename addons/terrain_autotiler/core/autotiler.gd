@@ -375,12 +375,12 @@ static func get_all_cell_neighbor_coordinates(tile_map : TileMap, terrain_set : 
 ## See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler: Additional Features[/url].
 ## [br][br]
 ## See also [method set_cells_terrain_path] and [method set_cells_terrains].
-func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, terrain : int) -> Error:
+func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, terrain : int) -> void:
 	if not is_valid():
-		return Error.FAILED
+		return
 
 	var request := _Request.new()
-	print("maximum update size = %s" % maximum_update_size)
+#	print("maximum update size = %s" % maximum_update_size)
 
 	var error : TA_Error = request.setup(
 			_tile_map,
@@ -392,16 +392,16 @@ func set_cells_terrain_connect(layer : int, cells : Array, terrain_set : int, te
 		)
 	if error:
 		_print_error(error)
-		return Error.FAILED
+		return
 
 	error = request.add_painted_cells_list(cells, terrain)
 	if error:
 		_print_error(error)
-		return Error.FAILED
+		return
 
 	_last_update_result = _TilesUpdater.new().update_tiles(request)
 
-	return Error.OK
+	return
 
 
 
@@ -430,9 +430,9 @@ func _print_error(p_error : Autotiler.TA_Error) -> void:
 ## See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler: Additional Features[/url].
 ## [br][br]
 ## See also [method set_cells_terrain_connect] and [method set_cells_terrains].
-func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terrain : int) -> Error:
+func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terrain : int) -> void:
 	if not is_valid():
-		return Error.FAILED
+		return
 
 	var request := _Request.new()
 
@@ -446,16 +446,16 @@ func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terra
 		)
 	if error:
 		_print_error(error)
-		return Error.FAILED
+		return
 
 	error = request.add_painted_cells_list(cells, terrain)
 	if error:
 		_print_error(error)
-		return Error.FAILED
+		return
 
 	_last_update_result = _TilesUpdater.new().update_tiles(request)
 
-	return Error.OK
+	return
 
 ## Updates cells according to the provided [param cells_terrains] dictionary
 ## with [Vector2i] [b]coordinates[/b] as keys and [int] [b]terrains[/b] as values.
@@ -482,9 +482,9 @@ func set_cells_terrain_path(layer : int, cells : Array, terrain_set : int, terra
 ## [br][br]
 ## If [param connect] is [code]false[/code], no surrounding cells will be updated.
 ## See [method set_cells_terrain_path].
-func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : int, connect : bool) -> Error:
+func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : int, connect : bool) -> void:
 	if not is_valid():
-		return Error.FAILED
+		return
 
 	var request := _Request.new()
 
@@ -498,16 +498,16 @@ func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : 
 		)
 	if error:
 		_print_error(error)
-		return Error.FAILED
+		return
 
 	error = request.add_painted_cells_dict(cells_terrains)
 	if error:
 		_print_error(error)
-		return Error.FAILED
+		return
 
 	_last_update_result = _TilesUpdater.new().update_tiles(request)
 
-	return Error.OK
+	return
 
 
 
@@ -518,19 +518,19 @@ func set_cells_terrains(layer : int, cells_terrains : Dictionary, terrain_set : 
 ## By default, [param terrain_set] is set to [member NULL_TERRAIN_SET].
 ## [br][br]
 ## To assign [i]new[/i] terrains to an entire layer, use [method set_cells_terrains].
-func update_terrain_tiles(layer : int, terrain_set := NULL_TERRAIN_SET) -> Error:
+func update_terrain_tiles(layer : int, terrain_set := NULL_TERRAIN_SET) -> void:
 	if not is_valid():
-		return Error.FAILED
+		return
 
 	if terrain_set != NULL_TERRAIN_SET:
 		var error := _update_terrain_set_tiles(layer, terrain_set)
 		if error:
-			return Error.FAILED
-		return Error.OK
+			return
+		return
 
 	for terrain_set_idx in _tile_map.tile_set.get_terrain_sets_count():
 		var error := _update_terrain_set_tiles(layer, terrain_set_idx)
-	return Error.OK
+	return
 
 
 func _update_terrain_set_tiles(layer : int, terrain_set : int) -> Error:
