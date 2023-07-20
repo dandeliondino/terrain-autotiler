@@ -16,6 +16,7 @@ func place_tiles(p_request : Request, p_cells : Dictionary) -> void:
 	request = p_request
 	cells = p_cells
 	result = request.update_result
+	var empty_pattern := request.terrains_data.empty_pattern
 
 	var cell_tiles_before := {}
 	var cell_tiles_after := {}
@@ -33,6 +34,11 @@ func place_tiles(p_request : Request, p_cells : Dictionary) -> void:
 			continue
 
 		cell_tiles_before[coords] = cells.original_tile_locations[coords]
+
+		if pattern == empty_pattern:
+			cell_tiles_after[coords] = null
+			tile_map.erase_cell(layer, coords)
+			continue
 
 		var tile_location := pattern.get_tile()
 		if not tile_location:
