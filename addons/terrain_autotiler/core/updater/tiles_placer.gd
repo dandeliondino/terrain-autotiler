@@ -16,6 +16,7 @@ func place_tiles(p_request : Request, p_cells : Dictionary) -> void:
 	request = p_request
 	cells = p_cells
 	result = request.update_result
+	var empty_pattern := request.terrains_data.empty_pattern
 
 	var cell_tiles_before := {}
 	var cell_tiles_after := {}
@@ -27,6 +28,13 @@ func place_tiles(p_request : Request, p_cells : Dictionary) -> void:
 		var pattern : TerrainPattern = cells.patterns.get(coords, null)
 		if not pattern:
 			result.add_cell_error(coords, UpdateResult.CellError.NO_PATTERN_ASSIGNED)
+			continue
+
+		# may have been tile of other terrain set that want to erase
+		if pattern == empty_pattern:
+			cell_tiles_before[coords] = cells.original_tile_locations[coords]
+			cell_tiles_after[coords] = null
+			tile_map.erase_cell(layer, coords)
 			continue
 
 		if pattern == cells.original_patterns[coords]:
