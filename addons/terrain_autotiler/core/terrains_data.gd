@@ -100,21 +100,17 @@ var single_pattern_terrains := {} # {tile_terrain : pattern}
 
 enum Score {
 	PRIMARY,
-	PRIMARY_LOW,
-	HIGH,
-	LOW,
+	SECONDARY,
 	IGNORE,
 	MATCHING_BIT,
 	NON_MATCHING_BIT,
 }
 
 const ScoreValues := {
-	Score.PRIMARY : 300,
-	Score.PRIMARY_LOW : 250,
-	Score.IGNORE : 201,
-	Score.HIGH : 200,
-	Score.LOW : 100,
-	Score.MATCHING_BIT : 300,
+	Score.PRIMARY : 200,
+	Score.IGNORE : 200,
+	Score.SECONDARY : 100,
+	Score.MATCHING_BIT : 200,
 	Score.NON_MATCHING_BIT : -10000,
 }
 
@@ -423,7 +419,6 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 
 	for peering_terrain in peering_terrains:
 		var missing := false
-		var low_count := false
 		var primary := false
 		var ignore := false
 
@@ -433,8 +428,6 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 				break
 			elif get_primary_peering_terrain(tile_terrain) == peering_terrain:
 				primary = true
-			elif _get_peering_terrain_pattern_count(tile_terrain, peering_terrain) < cn.get_full_set_pattern_count():
-				low_count = true
 
 		if missing:
 			continue
@@ -445,27 +438,17 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 			continue
 
 
-#		if ignore:
-#			peering_terrain_scores[peering_terrain] = \
-#				ScoreValues[Score.IGNORE] - priority_score
-		if low_count:
-			if primary:
-				peering_terrain_scores[peering_terrain] = \
-					ScoreValues[Score.PRIMARY_LOW] - priority_score
-			else:
-				peering_terrain_scores[peering_terrain] = \
-					ScoreValues[Score.LOW] - priority_score
-		elif primary:
+		if primary:
 			peering_terrain_scores[peering_terrain] = \
 				ScoreValues[Score.PRIMARY] - priority_score
 		else:
 			peering_terrain_scores[peering_terrain] = \
-				ScoreValues[Score.HIGH] - priority_score
+				ScoreValues[Score.SECONDARY] - priority_score
 
 	for tile_terrain in p_tile_terrains:
 		if _has_peering_terrain(tile_terrain, ignore_terrain):
 			peering_terrain_scores[ignore_terrain] = \
-				ScoreValues[Score.IGNORE]
+				ScoreValues[Score.IGNORE] - tile_terrains.size() # so will always be lowest
 
 	var sorted_peering_terrains := peering_terrain_scores.keys()
 	sorted_peering_terrains.sort_custom(
