@@ -146,12 +146,16 @@ static func _validate_primary_peering_terrains(terrain_set_meta : Dictionary, ti
 
 	var primary_peering_terrains : Dictionary = terrain_set_meta[META_PRIMARY_PEERING_TERRAINS]
 
-	for terrain in primary_peering_terrains:
-		if terrain >= tile_set.get_terrains_count(terrain_set):
+	for terrain in primary_peering_terrains.keys():
+		if terrain >= tile_set.get_terrains_count(terrain_set) \
+			or terrain < -1 \
+			or _is_alternative_terrain(tile_set, terrain_set, terrain):
+
 			primary_peering_terrains.erase(terrain)
 
 	for terrain in tile_set.get_terrains_count(terrain_set):
-		if tile_set.get_terrain_name(terrain_set, terrain) == Autotiler._IGNORE_TERRAIN_NAME: # TODO
+		print("_is_alternative_terrain() - %s = %s" % [terrain, _is_alternative_terrain(tile_set, terrain_set, terrain)])
+		if _is_alternative_terrain(tile_set, terrain_set, terrain):
 			continue
 		var primary_terrain : int = primary_peering_terrains.get(terrain, Autotiler.NULL_TERRAIN)
 		if primary_terrain == Autotiler.NULL_TERRAIN or primary_terrain >= tile_set.get_terrains_count(terrain_set):
@@ -395,7 +399,7 @@ static func _validate_alternatives(tile_set : TileSet, terrain_set : int) -> voi
 	# remove alternatives that were deleted from terrain set
 	for alternative_name in alternatives.keys():
 		if not terrain_set_alternatives.has(alternative_name):
-			printerr("Terrain Autotiler Error: Alternative terrain %s not found" % alternative_name)
+#			printerr("Terrain Autotiler Error: Alternative terrain %s not found" % alternative_name)
 			alternatives.erase(alternative_name)
 
 	# add alternatives not in list
