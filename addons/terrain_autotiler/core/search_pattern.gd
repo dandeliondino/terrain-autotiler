@@ -219,8 +219,30 @@ func get_match_score(p_pattern : TerrainPattern, p_allow_non_matching : bool) ->
 			else:
 				if peering_terrain == pattern_peering_terrain:
 					score += TerrainsData.ScoreValues[TerrainsData.Score.MATCHING_BIT]
-				elif peering_terrain == _ignore_terrain or pattern_peering_terrain == _ignore_terrain:
-					score += TerrainsData.ScoreValues[TerrainsData.Score.IGNORE]
+
+				elif pattern_peering_terrain == _ignore_terrain:
+					# if pattern's peering terrain is ignore_terrain
+					score += TerrainsData.ScoreValues[TerrainsData.Score.IGNORE] - terrains_data.peering_terrains.size()
+
+				elif peering_terrain == _ignore_terrain:
+					# if neighbor's peering terrain is ignore_terrain
+					score += get_bit_peering_terrain_score(bit, pattern_peering_terrain)
+
+#					var primary_terrains_set := {terrains_data.get_primary_peering_terrain(tile_terrain): true}
+#					for neighbor_coords in _bit_neighbor_bits[bit]:
+#						var neighbor_pattern := _neighbor_patterns.get(neighbor_coords, null)
+#						if not neighbor_pattern:
+#							continue
+#						var neighbor_tile_terrain : int = neighbor_pattern.tile_terrain
+#						var neighbor_primary_peering_terrain := terrains_data.get_primary_peering_terrain(neighbor_tile_terrain)
+#						primary_terrains_set[neighbor_primary_peering_terrain] = true
+#
+#					var priority_score := terrains_data._peering_terrain_priorities.find(pattern_peering_terrain)
+#					if pattern_peering_terrain in primary_terrains_set:
+#						score += TerrainsData.ScoreValues[TerrainsData.Score.PRIMARY] - priority_score
+#					else:
+#						score += TerrainsData.ScoreValues[TerrainsData.Score.SECONDARY] - priority_score
+
 				else:
 					printerr("this shouldn't happen")
 					pass
