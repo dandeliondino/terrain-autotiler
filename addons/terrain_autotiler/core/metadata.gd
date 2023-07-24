@@ -1,8 +1,4 @@
-@tool
 extends Object
-
-
-
 
 const META_NAME := "terrain_autotiler"
 const META_VERSION := "version"
@@ -10,10 +6,6 @@ const META_VERSION := "version"
 # TileMap
 const META_LAYERS := "layers"
 const META_LOCKED_CELLS := "locked_cells"
-
-
-
-
 
 
 static func validate_metadata(tile_map : TileMap) -> void:
@@ -35,8 +27,7 @@ static func _validate_tile_map_metadata(tile_map : TileMap) -> void:
 	if not tile_map.has_meta(META_NAME):
 		tile_map.set_meta(META_NAME, {})
 	var meta : Dictionary = tile_map.get_meta(META_NAME)
-	if not meta.has(META_VERSION):
-		meta[META_VERSION] = get_plugin_version()
+	meta[META_VERSION] = get_plugin_version()
 
 	if not meta.has(META_LAYERS):
 		meta[META_LAYERS] = {}
@@ -99,8 +90,7 @@ static func validate_tile_set_metadata(tile_set : TileSet) -> void:
 	if not tile_set.has_meta(META_NAME):
 		tile_set.set_meta(META_NAME, {})
 	var meta : Dictionary = tile_set.get_meta(META_NAME)
-	if not meta.has(META_VERSION):
-		meta[META_VERSION] = get_plugin_version()
+	meta[META_VERSION] = get_plugin_version() # always update version
 	if not meta.has(META_TERRAIN_SETS):
 		meta[META_TERRAIN_SETS] = {}
 
@@ -118,6 +108,8 @@ static func validate_tile_set_metadata(tile_set : TileSet) -> void:
 		var terrain_set_meta : Dictionary = terrain_set_metas[terrain_set]
 		_validate_match_mode(terrain_set_meta, tile_set)
 		_validate_primary_peering_terrains(terrain_set_meta, tile_set, terrain_set)
+		_validate_priorities(tile_set, terrain_set)
+		_validate_alternatives(tile_set, terrain_set)
 
 
 static func _get_terrain_set_meta(tile_set : TileSet, terrain_set : int) -> Dictionary:
