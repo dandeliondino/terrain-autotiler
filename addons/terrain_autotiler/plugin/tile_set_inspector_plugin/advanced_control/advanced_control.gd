@@ -19,9 +19,6 @@ func setup(p_tile_set : TileSet, p_terrain_set : int) -> void:
 
 
 func update_section_buttons() -> void:
-	await get_tree().process_frame
-	await get_tree().process_frame
-	await get_tree().process_frame
 	var editor_plugin := EditorPlugin.new()
 	var editor_interface := editor_plugin.get_editor_interface()
 
