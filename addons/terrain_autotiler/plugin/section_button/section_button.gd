@@ -1,6 +1,7 @@
 @tool
 extends Button
 
+signal expand_state_changed(value)
 
 const LABEL_MARGIN_ADJUST := -6
 
@@ -69,6 +70,7 @@ func setup() -> void:
 
 
 
+
 func _update_label_text() -> void:
 	label.text = label_text
 
@@ -82,6 +84,7 @@ func _toggle_expanded(value : bool) -> void:
 		if is_instance_valid(expand_container):
 			expand_container.hide()
 		arrow_rect.texture = icon_collapsed
+	expand_state_changed.emit(value)
 
 
 func _toggle_hover(value : bool) -> void:

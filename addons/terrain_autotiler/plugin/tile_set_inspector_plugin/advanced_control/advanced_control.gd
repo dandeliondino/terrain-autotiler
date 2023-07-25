@@ -12,10 +12,16 @@ func setup(p_tile_set : TileSet, p_terrain_set : int) -> void:
 	tile_set = p_tile_set
 	terrain_set = p_terrain_set
 
+	tile_set.changed.connect(_on_tile_set_changed)
+
 	primary_peering_terrains_control.setup(tile_set, terrain_set)
 
 	update_section_buttons.call_deferred()
 
+
+
+func _on_tile_set_changed() -> void:
+	primary_peering_terrains_control.update()
 
 
 func update_section_buttons() -> void:
