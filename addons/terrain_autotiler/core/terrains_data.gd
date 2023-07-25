@@ -101,16 +101,17 @@ var single_pattern_terrains := {} # {tile_terrain : pattern}
 enum Score {
 	PRIMARY,
 	SECONDARY,
-	IGNORE,
 	MATCHING_BIT,
 	NON_MATCHING_BIT,
 }
 
+# peering terrains: subtract index * 10
+# alternative terrains: get terrain from list, subtract index * 1
+# matching bit: get terrain from list, score of original terrain
+
 const ScoreValues := {
-	Score.PRIMARY : 200,
-	Score.IGNORE : 200,
-	Score.SECONDARY : 100,
-	Score.MATCHING_BIT : 200,
+	Score.PRIMARY : 10000,
+	Score.SECONDARY : 1000,
 	Score.NON_MATCHING_BIT : -10000,
 }
 
@@ -424,8 +425,9 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 
 		for tile_terrain in p_tile_terrains:
 			if not _has_peering_terrain(tile_terrain, peering_terrain):
-				missing = true
-				break
+				if not has_ignore_terrain(tile_terrain):
+					missing = true
+					break
 			elif get_primary_peering_terrain(tile_terrain) == peering_terrain:
 				primary = true
 
@@ -433,10 +435,9 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 			continue
 
 		const NOT_FOUND := -1
-		var priority_score := _peering_terrain_priorities.find(peering_terrain)
+		var priority_score := _peering_terrain_priorities.find(peering_terrain) * 10
 		if priority_score == NOT_FOUND:
 			continue
-
 
 		if primary:
 			peering_terrain_scores[peering_terrain] = \
@@ -445,16 +446,31 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 			peering_terrain_scores[peering_terrain] = \
 				ScoreValues[Score.SECONDARY] - priority_score
 
-	for tile_terrain in p_tile_terrains:
-		if _has_peering_terrain(tile_terrain, ignore_terrain):
-			peering_terrain_scores[ignore_terrain] = \
-				ScoreValues[Score.IGNORE] - tile_terrains.size() # so will always be lowest
 
 	var sorted_peering_terrains := peering_terrain_scores.keys()
 	sorted_peering_terrains.sort_custom(
 		func(a,b):
 			return peering_terrain_scores[a] > peering_terrain_scores[b]
 	)
+
+	# add ignore terrain in second place
+	var can_use_ignore_terrain := false
+	for tile_terrain in p_tile_terrains:
+		if has_ignore_terrain(tile_terrain):
+			can_use_ignore_terrain = true
+			break
+
+	if can_use_ignore_terrain:
+		var ignore_terrain_priority := _peering_terrain_priorities.find(ignore_terrain)
+
+		if sorted_peering_terrains.size() == 0:
+			sorted_peering_terrains.append(ignore_terrain)
+			peering_terrain_scores[ignore_terrain] = ScoreValues[Score.SECONDARY] - ignore_terrain_priority
+		else:
+			var highest_terrain_score : int = peering_terrain_scores[sorted_peering_terrains[0]]
+			var ignore_score := highest_terrain_score - ignore_terrain_priority
+			sorted_peering_terrains.insert(1, ignore_terrain)
+			peering_terrain_scores[ignore_terrain] = ignore_score
 
 	var sorted_dict := {}
 	for peering_terrain in sorted_peering_terrains:
