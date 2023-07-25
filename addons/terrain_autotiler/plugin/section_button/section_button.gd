@@ -64,6 +64,7 @@ func setup() -> void:
 	label.set("theme_override_colors/font_focus_color", get_theme_color("font_color", "Editor"))
 	label.set("theme_override_colors/font_hover_pressed_color", get_theme_color("font_color", "Editor"))
 
+
 #	custom_minimum_size.y = size.y + 4
 
 

@@ -12,7 +12,7 @@
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bxs77"]
 
-[node name="SectionButton" type="Button"]
+[node name="SectionButton" type="Button" groups=["ta_section_button"]]
 anchors_preset = 10
 anchor_right = 1.0
 grow_horizontal = 2
