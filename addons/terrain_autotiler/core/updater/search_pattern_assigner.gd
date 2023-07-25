@@ -393,11 +393,19 @@ func _assign_non_matching_patterns() -> void:
 	for coords in non_matching_cells_set:
 		if not _cell_needs_pattern(coords, false):
 			continue
+
 		if not result.cell_errors.has(coords):
 			result.add_cell_error(coords, UpdateResult.CellError.NO_PATTERN_FOUND)
+
+		var pattern : TerrainPattern
 		var search_pattern := _get_or_create_search_pattern(coords)
-		var possible_patterns := terrains_data.get_patterns_by_terrain(search_pattern.tile_terrain)
-		var pattern := _get_max_score_pattern(search_pattern, possible_patterns, true)
+		if search_pattern.can_match_to_empty && search_pattern.has_empty_neighbor():
+			pattern = _get_matching_pattern_simulate_no_empty_match(coords, true)
+
+		if not pattern:
+			var possible_patterns := terrains_data.get_patterns_by_terrain(search_pattern.tile_terrain)
+			pattern = _get_max_score_pattern(search_pattern, possible_patterns, true)
+
 		_set_cell_pattern_and_update_search(coords, search_pattern, pattern)
 		if cell_logging:
 			result.log_assign_pattern(
@@ -433,12 +441,8 @@ func _assign_matching_pattern(p_coords : Vector2i, p_complex : bool) -> Error:
 	if not pattern:
 		if cell_logging:
 			result.add_cell_log(p_coords, "No pattern found.")
-		if search_pattern.can_match_to_empty && search_pattern.has_empty_neighbor():
-			if cell_logging:
-				result.add_cell_log(p_coords, "Simulating no match to empty...")
-			search_pattern = _create_search_pattern(p_coords, false, false)
-			matching_pattern_result = _get_matching_pattern(search_pattern, p_complex)
-			pattern = matching_pattern_result["pattern"]
+#		if search_pattern.can_match_to_empty && search_pattern.has_empty_neighbor():
+#			pattern = _get_matching_pattern_simulate_no_empty_match(p_coords, p_complex)
 
 	if pattern:
 		_set_cell_pattern_and_update_search(p_coords, search_pattern, pattern)
@@ -452,6 +456,14 @@ func _assign_matching_pattern(p_coords : Vector2i, p_complex : bool) -> Error:
 		return Error.OK
 
 	return Error.FAILED
+
+
+func _get_matching_pattern_simulate_no_empty_match(p_coords : Vector2i, p_complex : bool) -> TerrainPattern:
+	if cell_logging:
+		result.add_cell_log(p_coords, "Simulating no match to empty...")
+	var search_pattern := _create_search_pattern(p_coords, false, false)
+	var matching_pattern_result : Dictionary = _get_matching_pattern(search_pattern, p_complex)
+	return matching_pattern_result["pattern"]
 
 
 func _get_matching_pattern(p_search_pattern : SearchPattern, p_complex : bool) -> Dictionary:
