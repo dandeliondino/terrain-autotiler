@@ -180,7 +180,7 @@ func _load_terrains() -> void:
 
 		_primary_peering_terrains[terrain] = Metadata.get_primary_peering_terrain(tile_set, terrain_set, terrain)
 
-	_peering_terrain_priorities = all_terrains + [EMPTY_TERRAIN]
+	_peering_terrain_priorities = Metadata.get_priorities_list(tile_set, terrain_set)
 
 
 # -----------------------------------------------
