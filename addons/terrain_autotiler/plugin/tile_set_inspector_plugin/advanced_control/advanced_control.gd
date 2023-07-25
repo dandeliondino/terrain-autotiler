@@ -7,6 +7,7 @@ var terrain_set : int
 
 @onready var primary_peering_terrains_control: VBoxContainer = %PrimaryPeeringTerrainsControl
 @onready var priorities_control: VBoxContainer = %PrioritiesControl
+@onready var alternatives_control: VBoxContainer = %AlternativesControl
 
 
 func setup(p_tile_set : TileSet, p_terrain_set : int) -> void:
@@ -17,6 +18,7 @@ func setup(p_tile_set : TileSet, p_terrain_set : int) -> void:
 
 	primary_peering_terrains_control.setup(tile_set, terrain_set)
 	priorities_control.setup(tile_set, terrain_set)
+	alternatives_control.setup(tile_set, terrain_set)
 
 	update_section_buttons.call_deferred()
 
@@ -25,6 +27,7 @@ func setup(p_tile_set : TileSet, p_terrain_set : int) -> void:
 func _on_tile_set_changed() -> void:
 	primary_peering_terrains_control.update()
 	priorities_control.update()
+	alternatives_control.update()
 
 
 func update_section_buttons() -> void:

@@ -470,6 +470,16 @@ static func _get_alternatives_from_terrain_set(tile_set : TileSet, terrain_set :
 	return alternative_terrains
 
 
+static func get_alternatives_list(tile_set : TileSet, terrain_set : int) -> Array:
+	if not is_instance_valid(tile_set):
+		return []
+	if terrain_set >= tile_set.get_terrain_sets_count():
+		return []
+
+	var terrain_set_meta := _get_terrain_set_meta(tile_set, terrain_set)
+	return terrain_set_meta[META_ALTERNATIVES].keys()
+
+
 static func set_alternative_match_all(
 	tile_set : TileSet,
 	terrain_set : int,
@@ -481,6 +491,7 @@ static func set_alternative_match_all(
 		return
 
 	alternative_dict[META_ALTERNATIVE_MATCH_ALL] = value
+	tile_set.changed.emit()
 
 
 static func get_alternative_match_all(
