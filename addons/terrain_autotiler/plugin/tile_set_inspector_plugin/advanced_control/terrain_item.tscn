@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bpqwka5ntlgce"]
 
-[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/primary_peering_terrains_control/terrain_item.gd" id="1_67b7n"]
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/terrain_item.gd" id="1_67b7n"]
 
 [node name="TerrainItem" type="HBoxContainer"]
 script = ExtResource("1_67b7n")

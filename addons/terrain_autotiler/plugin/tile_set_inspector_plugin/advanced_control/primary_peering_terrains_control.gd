@@ -1,8 +1,8 @@
 @tool
 extends Control
 
-const TerrainItem := preload("res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/primary_peering_terrains_control/terrain_item.gd")
-const TerrainItemScene := preload("res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/primary_peering_terrains_control/terrain_item.tscn")
+const TerrainItem := preload("res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/terrain_item.gd")
+const TerrainItemScene := preload("res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/terrain_item.tscn")
 const Metadata := preload("res://addons/terrain_autotiler/core/metadata.gd")
 
 var tile_set : TileSet

@@ -154,7 +154,7 @@ static func _validate_primary_peering_terrains(terrain_set_meta : Dictionary, ti
 			primary_peering_terrains.erase(terrain)
 
 	for terrain in tile_set.get_terrains_count(terrain_set):
-		print("_is_alternative_terrain() - %s = %s" % [terrain, _is_alternative_terrain(tile_set, terrain_set, terrain)])
+#		print("_is_alternative_terrain() - %s = %s" % [terrain, _is_alternative_terrain(tile_set, terrain_set, terrain)])
 		if _is_alternative_terrain(tile_set, terrain_set, terrain):
 			continue
 		var primary_terrain : int = primary_peering_terrains.get(terrain, Autotiler.NULL_TERRAIN)
