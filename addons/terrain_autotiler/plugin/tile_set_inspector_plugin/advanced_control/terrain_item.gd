@@ -1,5 +1,5 @@
 @tool
-extends Control
+extends PanelContainer
 
 
 const TERRAIN_NAME_TEMPLATE := "({index}) {name}"
@@ -45,6 +45,8 @@ func setup(p_tile_set : TileSet, p_terrain_set : int, p_tile_terrain : int) -> v
 	var current_index := option_button.get_item_index(current_id)
 
 	option_button.select(current_index)
+
+	set("theme_override_styles/panel", get_theme_stylebox("child_bg", "EditorProperty"))
 
 
 

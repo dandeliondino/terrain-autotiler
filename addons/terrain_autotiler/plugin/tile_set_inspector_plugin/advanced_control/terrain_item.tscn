@@ -2,28 +2,35 @@
 
 [ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/terrain_item.gd" id="1_67b7n"]
 
-[node name="TerrainItem" type="HBoxContainer"]
+[node name="TerrainItem" type="PanelContainer"]
 script = ExtResource("1_67b7n")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="."]
+[node name="HBoxContainer2" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="HBoxContainer2"]
+custom_minimum_size = Vector2(8, 0)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer2"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ColorRect" type="ColorRect" parent="HBoxContainer"]
+[node name="ColorRect" type="ColorRect" parent="HBoxContainer2/HBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
 
-[node name="Label" type="Label" parent="HBoxContainer"]
+[node name="Label" type="Label" parent="HBoxContainer2/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "[0] TerrainName"
 
-[node name="OptionButton" type="OptionButton" parent="."]
+[node name="OptionButton" type="OptionButton" parent="HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[connection signal="item_selected" from="OptionButton" to="." method="_on_option_button_item_selected"]
+[connection signal="item_selected" from="HBoxContainer2/OptionButton" to="." method="_on_option_button_item_selected"]

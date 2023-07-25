@@ -285,7 +285,6 @@ static func _reset_priorities(tile_set : TileSet, terrain_set : int) -> void:
 		META_PRIORITIES_LIST : _get_default_priorities_list(tile_set, terrain_set),
 	}
 
-	tile_set.changed.emit()
 
 
 static func _get_default_priorities_list(tile_set : TileSet, terrain_set : int) -> PackedInt32Array:
@@ -311,7 +310,7 @@ static func _alter_peering_terrain_priority(tile_set : TileSet, terrain_set : in
 		return
 	if terrain_set >= tile_set.get_terrain_sets_count():
 		return
-	if not _is_terrain_index_valid(tile_set, terrain_set, terrain, false):
+	if not _is_terrain_index_valid(tile_set, terrain_set, terrain, true):
 		return
 
 	_validate_priorities(tile_set, terrain_set)
