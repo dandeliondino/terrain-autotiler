@@ -329,7 +329,7 @@ func _clear_cells_for_backtracking(p_coords : Vector2i) -> Array[Vector2i]:
 
 		if cells.patterns.has(neighbor_coords):
 			if cell_logging:
-				result.add_cell_log(neighbor_coords, "backtrack neighbor - erasing pattern")
+				result.add_cell_log(neighbor_coords, "*************************\nbacktrack neighbor - erasing pattern")
 			cells.patterns.erase(neighbor_coords)
 			neighbors_with_erased_patterns.append(neighbor_coords)
 			for second_neighbor_coords in cells.neighbors_coords[neighbor_coords]:
@@ -463,7 +463,9 @@ func _get_matching_pattern(p_search_pattern : SearchPattern, p_complex : bool) -
 		pattern_type = UpdateResult.PatternType.COMPLEX_BEST_PATTERN
 
 	if top_pattern:
-		pattern = terrains_data.get_pattern(top_pattern)
+		pattern = terrains_data.get_pattern(top_pattern, true)
+		if cell_logging:
+			result.add_cell_log(p_search_pattern.coords, "found top pattern=%s" % [pattern != null])
 		if pattern:
 			if p_complex:
 				pattern_type = UpdateResult.PatternType.COMPLEX_TOP_PATTERN

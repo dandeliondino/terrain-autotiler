@@ -276,9 +276,6 @@ func get_match_score(p_pattern : TerrainPattern, p_allow_non_matching : bool) ->
 
 
 func get_top_pattern() -> TerrainPattern:
-	if terrains_data.has_ignore_terrain(tile_terrain):
-		return null
-
 	var pattern := TerrainPattern.new(get_peering_bits())
 	pattern.tile_terrain = tile_terrain
 	for bit in get_peering_bits():
@@ -293,8 +290,14 @@ func get_top_pattern() -> TerrainPattern:
 			# cannot create a valid pattern
 			return null
 
+		var bit_terrain : int = bit_scores.keys().front()
+
 		# because bit_scores are pre-sorted in descending order,
 		# the first item will be the peering terrain with the highest score
-		pattern.set_bit_peering_terrain(bit, bit_scores.keys().front())
+		pattern.set_bit_peering_terrain(bit, bit_terrain)
+
+	if terrains_data.has_ignore_terrain(tile_terrain):
+		if pattern.has_peering_terrain(_ignore_terrain):
+			return null
 
 	return pattern
