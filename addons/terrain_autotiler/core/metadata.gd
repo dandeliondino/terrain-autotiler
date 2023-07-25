@@ -207,6 +207,17 @@ static func get_primary_peering_terrain(tile_set : TileSet, terrain_set : int, t
 	return primary_peering_terrains.get(tile_terrain, tile_terrain)
 
 
+static func get_primary_peering_terrains(tile_set : TileSet, terrain_set : int) -> Dictionary:
+	if not is_instance_valid(tile_set):
+		return {}
+	if terrain_set >= tile_set.get_terrain_sets_count():
+		return {}
+
+	var terrain_set_meta := _get_terrain_set_meta(tile_set, terrain_set)
+	_validate_primary_peering_terrains(terrain_set_meta, tile_set, terrain_set)
+	var primary_peering_terrains : Dictionary = terrain_set_meta[META_PRIMARY_PEERING_TERRAINS]
+	return primary_peering_terrains.duplicate()
+
 
 
 # ------------------------------------------------------
