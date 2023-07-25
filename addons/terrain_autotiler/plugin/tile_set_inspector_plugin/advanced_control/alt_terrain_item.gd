@@ -17,8 +17,20 @@ func setup(p_tile_set : TileSet, p_terrain_set : int, p_terrain : int) -> void:
 	terrain_set = p_terrain_set
 	terrain = p_terrain
 
-	color_rect.color = tile_set.get_terrain_color(terrain_set, terrain)
+	var peering_terrain_name : String
+	var peering_terrain_color : Color
+
+	if terrain == Autotiler.EMPTY_TERRAIN:
+		peering_terrain_name = "<EMPTY>"
+		peering_terrain_color = Color.DIM_GRAY
+	else:
+		peering_terrain_name = tile_set.get_terrain_name(terrain_set, terrain)
+		peering_terrain_color = tile_set.get_terrain_color(terrain_set, terrain)
+
+	color_rect.color = peering_terrain_color
 	label.text = TERRAIN_NAME_TEMPLATE.format({
 		"index": terrain,
-		"name": tile_set.get_terrain_name(terrain_set, terrain),
+		"name": peering_terrain_name,
 	})
+
+	set("theme_override_styles/panel", get_theme_stylebox("child_bg", "EditorProperty"))

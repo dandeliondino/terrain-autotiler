@@ -25,6 +25,8 @@ func update() -> void:
 	var alternatives_list := Metadata.get_alternatives_list(tile_set, terrain_set)
 	for alt_name in alternatives_list:
 		var terrain := get_terrain_from_name(alt_name)
+		if terrain == Autotiler.NULL_TERRAIN:
+			continue
 		var alternative_item : AlternativeItem = AlternativeItemScene.instantiate()
 		alternatives_container.add_child(alternative_item)
 		alternative_item.setup(tile_set, terrain_set, terrain, alt_name)

@@ -2,6 +2,7 @@
 extends Control
 
 const TERRAIN_NAME_TEMPLATE := "({index}) {name}"
+const EMPTY_ID := 999
 
 const Metadata := preload("res://addons/terrain_autotiler/core/metadata.gd")
 const AltTerrainItem := preload("res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/alt_terrain_item.gd")
@@ -19,7 +20,11 @@ var match_any : bool
 @onready var match_terrains_check_box: CheckBox = %MatchTerrainsCheckBox
 @onready var terrain_items_container: VBoxContainer = %TerrainItemsContainer
 @onready var empty_label: Label = %EmptyLabel
-@onready var terrain_option_button: OptionButton = %TerrainOptionButton
+@onready var add_terrain_button: MenuButton = %AddTerrainButton
+@onready var add_terrain_popup : PopupMenu = add_terrain_button.get_popup()
+@onready var terrains_list_panel: PanelContainer = %TerrainsListPanel
+@onready var alt_name_panel: PanelContainer = %AltNamePanel
+@onready var content_panel: PanelContainer = %ContentPanel
 
 
 func setup(p_tile_set : TileSet, p_terrain_set : int, p_terrain : int, p_alt_name : String) -> void:
@@ -28,7 +33,9 @@ func setup(p_tile_set : TileSet, p_terrain_set : int, p_terrain : int, p_alt_nam
 	terrain = p_terrain
 	alt_name = p_alt_name
 
-	color_rect.color = tile_set.get_terrain_color(terrain_set, terrain)
+	var color := tile_set.get_terrain_color(terrain_set, terrain)
+
+	color_rect.color = color
 	label.text = alt_name
 
 	match_any = Metadata.get_alternative_match_all(tile_set, terrain_set, alt_name)
@@ -43,7 +50,22 @@ func setup(p_tile_set : TileSet, p_terrain_set : int, p_terrain : int, p_alt_nam
 		match_terrains_check_box.toggled.connect(_on_match_terrains_toggled)
 
 	populate_terrain_items()
-	populate_terrain_option_button()
+
+	if match_any:
+		terrains_list_panel.hide()
+	else:
+		add_terrain_button.icon = get_theme_icon("Add", "EditorIcons")
+		populate_add_terrain_popup()
+
+
+#	set("theme_override_styles/panel", get_theme_stylebox("sub_inspector_bg8", "Editor"))
+#	set("theme_override_styles/panel", get_theme_stylebox("panel", "ItemList"))
+	alt_name_panel.set("theme_override_styles/panel", get_theme_stylebox("sub_inspector_property_bg0", "Editor"))
+	content_panel.set("theme_override_styles/panel", get_theme_stylebox("sub_inspector_bg0", "Editor"))
+#	terrains_list_panel.set("theme_override_styles/panel", get_theme_stylebox("sub_inspector_bg8", "Editor"))
+#	terrains_list_panel.set("theme_override_styles/panel", get_theme_stylebox("Content", "EditorStyles"))
+	label.set("theme_override_fonts/font", get_theme_font("main_button_font", "EditorFonts"))
+	label.set("theme_override_font_sizes/font_size", get_theme_font_size("main_button_font_size", "EditorFonts"))
 
 
 func populate_terrain_items() -> void:
@@ -55,7 +77,7 @@ func populate_terrain_items() -> void:
 
 	var terrains := Metadata.get_alternative_match_terrains(tile_set, terrain_set, alt_name)
 	if not terrains.size():
-		empty_label.show()
+		empty_label.hide()
 		return
 
 	empty_label.hide()
@@ -70,33 +92,39 @@ func populate_terrain_items() -> void:
 		terrain_item.remove_button.pressed.connect(_on_remove_button_pressed.bind(terrain))
 
 
-func populate_terrain_option_button() -> void:
-	terrain_option_button.clear()
+func populate_add_terrain_popup() -> void:
+	add_terrain_popup.clear()
 
 	var terrains_to_add := Metadata.get_alternative_match_terrains_can_add(tile_set, terrain_set, alt_name)
 	if terrains_to_add.size() == 0:
-		terrain_option_button.add_item("<none>")
-		terrain_option_button.select(0)
-		terrain_option_button.disabled = true
+		add_terrain_popup.add_item("<none>")
 		return
 
-	terrain_option_button.disabled = false
-
 	for peering_terrain in terrains_to_add:
-		var peering_terrain_name := tile_set.get_terrain_name(terrain_set, peering_terrain)
-		var peering_terrain_color := tile_set.get_terrain_color(terrain_set, peering_terrain)
+		var peering_terrain_name : String
+		var peering_terrain_color : Color
 
-		terrain_option_button.add_icon_item(
+		if peering_terrain == Autotiler.EMPTY_TERRAIN:
+			peering_terrain_name = "<EMPTY>"
+			peering_terrain_color = Color.DIM_GRAY
+		else:
+			peering_terrain_name = tile_set.get_terrain_name(terrain_set, peering_terrain)
+			peering_terrain_color = tile_set.get_terrain_color(terrain_set, peering_terrain)
+
+		var id := peering_terrain
+		if id == -1:
+			id = EMPTY_ID
+
+		add_terrain_popup.add_icon_item(
 			_get_icon(peering_terrain_color),
 			TERRAIN_NAME_TEMPLATE.format({
 				"index": peering_terrain,
 				"name": peering_terrain_name,
 			}),
-			peering_terrain,
+			id,
 		)
 
-	terrain_option_button.select(0)
-	terrain_option_button.item_selected.connect(_on_terrain_option_button_item_selected)
+	add_terrain_popup.id_pressed.connect(_on_add_terrain_popup_id_pressed)
 
 
 
@@ -108,8 +136,9 @@ func _get_icon(color : Color) -> ImageTexture:
 
 
 
-func _on_terrain_option_button_item_selected(idx : int) -> void:
-	var terrain := terrain_option_button.get_item_id(idx)
+func _on_add_terrain_popup_id_pressed(terrain : int) -> void:
+	if terrain == EMPTY_ID:
+		terrain = Autotiler.EMPTY_TERRAIN
 	Metadata.add_alternative_match_terrain(tile_set, terrain_set, alt_name, terrain)
 
 
@@ -119,7 +148,6 @@ func _on_remove_button_pressed(terrain : int) -> void:
 
 
 func _on_match_any_toggled(value : bool) -> void:
-	print("_on_match_any_toggled")
 	Metadata.set_alternative_match_all(tile_set, terrain_set, alt_name, value)
 
 

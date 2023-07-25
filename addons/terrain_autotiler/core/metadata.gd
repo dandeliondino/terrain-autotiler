@@ -569,6 +569,8 @@ static func get_alternative_match_terrains_can_add(
 		if alternative_terrains.has(terrain):
 			continue
 		terrains_to_add.append(terrain)
+
+	terrains_to_add.sort()
 	return terrains_to_add
 
 
@@ -603,6 +605,9 @@ static func _is_alternative_terrain(
 	tile_set : TileSet,
 	terrain_set : int,
 	terrain : int) -> bool:
+
+	if terrain == Autotiler.EMPTY_TERRAIN:
+		return false
 
 	var terrain_name := tile_set.get_terrain_name(terrain_set, terrain)
 	return terrain_name.begins_with("@")
