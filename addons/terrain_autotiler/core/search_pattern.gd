@@ -7,7 +7,7 @@ const EMPTY_TERRAIN := Autotiler.EMPTY_TERRAIN
 const MULTIPLE_TERRAINS := 999
 
 const INVALID_BIT := -1
-const INVALID_SCORE := -1
+const INVALID_SCORE := -1000000000
 
 const SearchPattern := preload("res://addons/terrain_autotiler/core/search_pattern.gd")
 const TerrainsData := preload("res://addons/terrain_autotiler/core/terrains_data.gd")
@@ -254,7 +254,12 @@ func get_match_score(p_pattern : TerrainPattern, p_allow_non_matching : bool) ->
 			# TEST
 			var bit_peering_terrain_score := get_bit_peering_terrain_score(bit, pattern_peering_terrain)
 			if bit_peering_terrain_score != INVALID_SCORE:
-				assert(bit_peering_terrain_score == matching_score)
+				if not can_match_to_empty && pattern_peering_terrain == EMPTY_TERRAIN:
+					# in this case, we are simulating a non-match to empty
+					# so the bit peering terrain score will not be accurate
+					pass
+				else:
+					assert(bit_peering_terrain_score == matching_score)
 
 		var bit_score := INVALID_SCORE
 
@@ -382,10 +387,7 @@ func get_match_score(p_pattern : TerrainPattern, p_allow_non_matching : bool) ->
 func _get_primary_peering_terrains_at_bit(p_bit : TileSet.CellNeighbor) -> PackedInt32Array:
 	var primary_terrains_set := {terrains_data.get_primary_peering_terrain(tile_terrain): true}
 	for neighbor_coords in _bit_neighbor_bits[p_bit]:
-		var neighbor_pattern := _neighbor_patterns.get(neighbor_coords, null)
-		if not neighbor_pattern:
-			continue
-		var neighbor_tile_terrain : int = neighbor_pattern.tile_terrain
+		var neighbor_tile_terrain : int = _neighbor_terrains[neighbor_coords]
 		var neighbor_primary_peering_terrain := terrains_data.get_primary_peering_terrain(neighbor_tile_terrain)
 		primary_terrains_set[neighbor_primary_peering_terrain] = true
 	return PackedInt32Array(primary_terrains_set.keys())

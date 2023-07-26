@@ -24,7 +24,7 @@ var _ordered_peering_bits : PackedInt32Array
 var all_terrains := []
 var tile_terrains := []
 var sorted_tile_terrains := []
-var peering_terrains := []
+var peering_terrains := PackedInt32Array()
 
 var terrain_display_patterns : Dictionary
 
@@ -420,8 +420,11 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 	# profiler.stop_timer("_get_transition_key()")
 	# profiler.start_timer("_create_transition_scores_list()")
 	var peering_terrain_scores := {}
+	var peering_terrains_with_empty := peering_terrains
+	if not peering_terrains_with_empty.has(EMPTY_TERRAIN):
+		peering_terrains_with_empty.append(EMPTY_TERRAIN)
 
-	for peering_terrain in peering_terrains:
+	for peering_terrain in peering_terrains_with_empty:
 		var missing := false
 		var primary := false
 
@@ -469,6 +472,17 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 		sorted_dict[peering_terrain] = peering_terrain_scores[peering_terrain]
 
 	_transition_peering_terrains[transition_key] = sorted_dict
+
+	# TEST
+	if p_tile_terrains.has(EMPTY_TERRAIN):
+		var match_to_empty := true
+		for tile_terrain in p_tile_terrains:
+			if not has_peering_terrain(tile_terrain, EMPTY_TERRAIN):
+				match_to_empty = false
+				break
+		if match_to_empty:
+			assert(peering_terrain_scores.has(EMPTY_TERRAIN))
+			assert(peering_terrain_scores[EMPTY_TERRAIN] == get_score_peering_terrain(EMPTY_TERRAIN, true))
 
 	# profiler.stop_timer("_create_transition_scores_list()")
 
@@ -591,13 +605,8 @@ func find_patterns(p_search_pattern : SearchPattern) -> Array:
 		var possible_terrains := p_search_pattern.get_all_bit_peering_terrains(bit)
 
 		# if an alternative terrain is in the search pattern
-		# append all the alt's peering terrains to possible terrains for the bit
-		for peering_terrain in possible_terrains.duplicate():
-			if alt_terrain_peering_terrains.has(peering_terrain):
-				for alt_peering_terrain in alt_terrain_peering_terrains[peering_terrain]:
-					if possible_terrains.has(alt_peering_terrain):
-						continue
-					possible_terrains.append(alt_peering_terrain)
+		# it is looking only for the alt terrain, not its possible terrains
+		# so don't add extra peering terrains
 
 		# if the tile terrain has an alt terrain that contains
 		# the search pattern's peering terrain,
@@ -639,7 +648,7 @@ func has_peering_terrain(p_tile_terrain : int, p_peering_terrain : int) -> bool:
 	if _get_peering_terrain_pattern_count(p_tile_terrain, p_peering_terrain) > 0:
 		return true
 	var alt_terrains : PackedInt32Array = alt_terrain_peering_terrains.get(p_tile_terrain, PackedInt32Array())
-	for alt_terrain in alt_terrain_peering_terrains[p_tile_terrain]:
+	for alt_terrain in alt_terrains:
 		if alt_terrain_peering_terrains[alt_terrain].has(p_peering_terrain):
 			return true
 	return false
