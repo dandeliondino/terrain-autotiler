@@ -58,8 +58,6 @@ const _DEFAULT_MATCH_MODE := MatchMode.MINIMAL
 const _PLUGIN_NAME := "TERRAIN_AUTOTILER"
 const _PLUGIN_CONFIG_PATH := "res://addons/terrain_autotiler/plugin.cfg"
 
-const _IGNORE_TERRAIN_NAME := "@ignore"
-
 const UPDATE_SIZE_NO_EXPANSION := Vector2i.ZERO
 const UPDATE_SIZE_NO_LIMIT := Vector2i(-1, -1)
 
@@ -371,7 +369,7 @@ static func get_all_cell_neighbor_coordinates(tile_map : TileMap, terrain_set : 
 ## except the parameter [param ignore_empty_terrains] is deprecated.
 ## Peering bits that are empty (set to [code]-1[/code]) will always be used to match to empty cells
 ## or other empty peering bits.
-## To specify peering bits to be ignored, use an [b]@ignore[/b] terrain.
+## To specify peering bits to be ignored, use alternative terrains.
 ## See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler: Additional Features[/url].
 ## [br][br]
 ## See also [method set_cells_terrain_path] and [method set_cells_terrains].
@@ -426,7 +424,7 @@ func _print_error(p_error : Autotiler.TA_Error) -> void:
 ## except the parameter [param ignore_empty_terrains] is deprecated.
 ## Peering bits that are empty (set to [code]-1[/code]) will always be used to match to empty cells
 ## or other empty peering bits.
-## To specify peering bits to be ignored, use an [b]@ignore[/b] terrain.
+## To specify peering bits to be ignored, use alternative terrains.
 ## See [url=https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features]Terrain Autotiler: Additional Features[/url].
 ## [br][br]
 ## See also [method set_cells_terrain_connect] and [method set_cells_terrains].

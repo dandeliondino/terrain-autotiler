@@ -59,10 +59,10 @@ func _add_controls(p_placeholder : Control, p_tile_set : TileSet, p_terrain_set 
 		mode_control.add_sibling(match_mode_control)
 		match_mode_control.setup(p_tile_set, p_terrain_set)
 
-	if not _has_ignore_terrain(p_tile_set, p_terrain_set):
-		var ignore_terrain_control := IgnoreTerrainControlScene.instantiate()
-		vbox.add_child(ignore_terrain_control)
-		ignore_terrain_control.setup(p_tile_set, p_terrain_set)
+#	if not _has_ignore_terrain(p_tile_set, p_terrain_set):
+#		var ignore_terrain_control := IgnoreTerrainControlScene.instantiate()
+#		vbox.add_child(ignore_terrain_control)
+#		ignore_terrain_control.setup(p_tile_set, p_terrain_set)
 
 	if p_tile_set.get_terrains_count(p_terrain_set) > 0:
 		var advanced_control : AdvancedControl = AdvancedControlScene.instantiate()
@@ -80,12 +80,12 @@ func _get_terrain_set_from_property(p_property_name : String) -> int:
 	return result.get_string(1).to_int()
 
 
-func _has_ignore_terrain(p_tile_set : TileSet, p_terrain_set : int) -> bool:
-	for terrain in p_tile_set.get_terrains_count(p_terrain_set):
-		var terrain_name := p_tile_set.get_terrain_name(p_terrain_set, terrain)
-		if terrain_name == Autotiler._IGNORE_TERRAIN_NAME:
-			return true
-	return false
+#func _has_ignore_terrain(p_tile_set : TileSet, p_terrain_set : int) -> bool:
+#	for terrain in p_tile_set.get_terrains_count(p_terrain_set):
+#		var terrain_name := p_tile_set.get_terrain_name(p_terrain_set, terrain)
+#		if terrain_name == Autotiler._IGNORE_TERRAIN_NAME:
+#			return true
+#	return false
 
 
 

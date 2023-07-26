@@ -58,12 +58,10 @@ var full_set_tile_terrains_set := {}
 
 var terrain_names := {}
 
-var ignore_terrain := NULL_TERRAIN
-var ignore_terrain_enabled := false
-var ignore_terrain_substitutes : PackedInt32Array
-
 var single_pattern_terrains := {} # {tile_terrain : pattern}
 
+var alt_terrain_peering_terrains := {} # {alt_terrain int : [peering_terrain, peering_terrain, ...] PackedInt32Array}
+var tile_terrain_alt_terrains := {} # {tile_terrain int : [alt_terrain, alt_terrain ...] PackedInt32Array}
 #var profiler := Profiler.new()
 
 # ----------------------------------------------------
@@ -114,6 +112,9 @@ const ScoreValues := {
 	Score.SECONDARY : 1000,
 	Score.NON_MATCHING_BIT : -10000,
 }
+
+const PEERING_TERRAIN_PRIORITY_MULTIPLIER := 10
+const ALTERNATIVE_TERRAIN_PRIORITY_MULTIPLIER := 1
 
 static func get_score(p_score : Score) -> int:
 	return ScoreValues[p_score]
@@ -174,14 +175,15 @@ func _load_terrains() -> void:
 		var terrain_name := tile_set.get_terrain_name(terrain_set, terrain)
 		terrain_names[terrain] = terrain_name
 
-		if terrain_name == Autotiler._IGNORE_TERRAIN_NAME:
-			ignore_terrain = terrain
-			ignore_terrain_enabled = true
+		if terrain_name.begins_with("@"):
+			alt_terrain_peering_terrains[terrain] = Metadata.get_alternative_match_terrains(tile_set, terrain_set, terrain_name)
 			continue
 
 		_primary_peering_terrains[terrain] = Metadata.get_primary_peering_terrain(tile_set, terrain_set, terrain)
 
 	_peering_terrain_priorities = Metadata.get_priorities_list(tile_set, terrain_set)
+
+
 
 
 # -----------------------------------------------
@@ -195,30 +197,29 @@ func _load_patterns() -> void:
 			continue
 		var source : TileSetAtlasSource = tile_set.get_source(source_id)
 		for tile_index in range(source.get_tiles_count()):
-			var coords := source.get_tile_id(tile_index)
-			for alternative_tile_index in source.get_alternative_tiles_count(coords):
-				var alternative_tile_id := source.get_alternative_tile_id(coords, alternative_tile_index)
-				var tile_data := source.get_tile_data(coords, alternative_tile_id)
+			var atlas_coords := source.get_tile_id(tile_index)
+			for alternative_tile_index in source.get_alternative_tiles_count(atlas_coords):
+				var alternative_tile_id := source.get_alternative_tile_id(atlas_coords, alternative_tile_index)
+				var tile_data := source.get_tile_data(atlas_coords, alternative_tile_id)
 				if tile_data.terrain_set != terrain_set:
 					continue
 
 				var pattern := TerrainPattern.new(cn.get_peering_bits()).create_from_tile_data(tile_data)
-				if pattern.tile_terrain == ignore_terrain:
-					printerr("Error: Ignore terrain used as tile terrain (center bit)")
+				if alt_terrain_peering_terrains.has(pattern.tile_terrain):
+					printerr(
+						"Terrain Autotiler: Error loading tile." \
+						+ " Alternative terrain used as tile terrain (center bit)." \
+						+ " (source id=%s, atlas coords=%s)" % [source_id, atlas_coords])
 					continue
 				var id := _add_pattern(pattern)
 
 				var tile_location := TileLocation.new(
 						source_id,
-						coords,
+						atlas_coords,
 						alternative_tile_id,
 						tile_data.probability
 					)
 				_patterns_by_id[id].add_tile(tile_location)
-
-	ignore_terrain_substitutes = PackedInt32Array(peering_terrains.duplicate()) # TODO: make peering_terrains a packedint32array too
-	if not ignore_terrain_substitutes.has(EMPTY_TERRAIN):
-		ignore_terrain_substitutes.append(EMPTY_TERRAIN)
 
 	_create_pattern_lookup()
 	for pattern in _patterns_by_id.values():
@@ -233,6 +234,23 @@ func _load_patterns() -> void:
 	_populate_primary_patterns()
 	_populate_full_set_tile_terrains()
 	_populate_terrain_display_patterns()
+
+
+func _populate_primary_patterns() -> void:
+	for tile_terrain in tile_terrains:
+		var primary_peering_terrain := get_primary_peering_terrain(tile_terrain)
+		var pattern := TerrainPattern.new(cn.get_peering_bits())
+		pattern.tile_terrain = tile_terrain
+
+		for bit in cn.get_peering_bits():
+			pattern.set_bit_peering_terrain(bit, primary_peering_terrain)
+
+#		print("finding primary pattern for %s..." % [terrain_names[tile_terrain]])
+#		print("\tprimary peering terrain=%s" % [terrain_names[primary_peering_terrain]])
+
+		var primary_pattern := get_pattern(pattern)
+		if primary_pattern:
+			_primary_patterns[tile_terrain] = primary_pattern
 
 
 func _populate_full_set_tile_terrains() -> void:
@@ -268,28 +286,7 @@ func _populate_terrain_display_patterns() -> void:
 		if max_score_pattern:
 			terrain_display_patterns[tile_terrain] = max_score_pattern
 
-
-
-
-
-
-func _populate_primary_patterns() -> void:
-	for tile_terrain in tile_terrains:
-		var primary_peering_terrain := get_primary_peering_terrain(tile_terrain)
-		var pattern := TerrainPattern.new(cn.get_peering_bits())
-		pattern.tile_terrain = tile_terrain
-
-		for bit in cn.get_peering_bits():
-			pattern.set_bit_peering_terrain(bit, primary_peering_terrain)
-
-#		print("finding primary pattern for %s..." % [terrain_names[tile_terrain]])
-#		print("\tprimary peering terrain=%s" % [terrain_names[primary_peering_terrain]])
-
-		var primary_pattern := get_pattern(pattern)
-		if primary_pattern:
-			_primary_patterns[tile_terrain] = primary_pattern
-
-
+# ------------------------------
 
 func _add_pattern(pattern : TerrainPattern) -> StringName:
 	var id : StringName = pattern.get_id()
@@ -315,6 +312,14 @@ func _add_pattern(pattern : TerrainPattern) -> StringName:
 		else:
 			_tile_peering_terrains_counts[tile_terrain][peering_terrain] += 1
 
+		if alt_terrain_peering_terrains.has(peering_terrain):
+			# if it is an alternative terrain
+			if not tile_terrain_alt_terrains.has(tile_terrain):
+				tile_terrain_alt_terrains[tile_terrain] = PackedInt32Array([peering_terrain])
+			else:
+				if not tile_terrain_alt_terrains[tile_terrain].has(peering_terrain):
+					tile_terrain_alt_terrains[tile_terrain].append(peering_terrain)
+
 		if not peering_terrains.has(peering_terrain):
 			peering_terrains.append(peering_terrain)
 
@@ -332,8 +337,6 @@ func _sort_tile_terrains() -> void:
 			var b_to_a_count := _get_peering_terrain_pattern_count(b, a_primary_peering_terrain)
 			return a_to_b_count > b_to_a_count
 	)
-
-
 
 
 # PATTERN DICT COMPREHENSION
@@ -407,8 +410,8 @@ func _load_transitions() -> void:
 					_create_transition_scores_list([a,b,c,d])
 
 
-func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 
+func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 	# profiler.start_timer("_get_transition_key()")
 	var transition_key := _get_transition_key(p_tile_terrains)
 	if _transition_peering_terrains.has(transition_key):
@@ -421,30 +424,23 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 	for peering_terrain in peering_terrains:
 		var missing := false
 		var primary := false
-		var ignore := false
+
+		if alt_terrain_peering_terrains.has(peering_terrain):
+			# add alts later
+			continue
 
 		for tile_terrain in p_tile_terrains:
-			if not _has_peering_terrain(tile_terrain, peering_terrain):
-				if not has_ignore_terrain(tile_terrain):
-					missing = true
-					break
+			if not has_peering_terrain(tile_terrain, peering_terrain):
+				# has_peering_terrain() includes alt terrains' peering terrains
+				missing = true
+				break
 			elif get_primary_peering_terrain(tile_terrain) == peering_terrain:
 				primary = true
 
 		if missing:
 			continue
 
-		const NOT_FOUND := -1
-		var priority_score := _peering_terrain_priorities.find(peering_terrain) * 10
-		if priority_score == NOT_FOUND:
-			continue
-
-		if primary:
-			peering_terrain_scores[peering_terrain] = \
-				ScoreValues[Score.PRIMARY] - priority_score
-		else:
-			peering_terrain_scores[peering_terrain] = \
-				ScoreValues[Score.SECONDARY] - priority_score
+		peering_terrain_scores[peering_terrain] = get_score_peering_terrain(peering_terrain, primary)
 
 
 	var sorted_peering_terrains := peering_terrain_scores.keys()
@@ -453,24 +449,20 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 			return peering_terrain_scores[a] > peering_terrain_scores[b]
 	)
 
-	# add ignore terrain in second place
-	var can_use_ignore_terrain := false
 	for tile_terrain in p_tile_terrains:
-		if has_ignore_terrain(tile_terrain):
-			can_use_ignore_terrain = true
-			break
-
-	if can_use_ignore_terrain:
-		var ignore_terrain_priority := _peering_terrain_priorities.find(ignore_terrain)
-
-		if sorted_peering_terrains.size() == 0:
-			sorted_peering_terrains.append(ignore_terrain)
-			peering_terrain_scores[ignore_terrain] = ScoreValues[Score.SECONDARY] - ignore_terrain_priority
-		else:
-			var highest_terrain_score : int = peering_terrain_scores[sorted_peering_terrains[0]]
-			var ignore_score := highest_terrain_score - ignore_terrain_priority
-			sorted_peering_terrains.insert(1, ignore_terrain)
-			peering_terrain_scores[ignore_terrain] = ignore_score
+		var alt_terrains : PackedInt32Array = tile_terrain_alt_terrains.get(tile_terrain, PackedInt32Array())
+		for alt_terrain in alt_terrains:
+			var alt_peering_terrains : PackedInt32Array = alt_terrain_peering_terrains[alt_terrain]
+			for peering_terrain in sorted_peering_terrains:
+				if alt_peering_terrains.has(peering_terrain):
+					var alt_adjustment := get_score_alternative_adjustment(alt_terrain)
+					peering_terrain_scores[alt_terrain] = peering_terrain_scores[peering_terrain] - alt_adjustment
+					var peering_terrain_idx := sorted_peering_terrains.find(peering_terrain)
+					# insert after peering terrain to maintain sorting
+					sorted_peering_terrains.insert(peering_terrain_idx + 1, alt_terrain)
+					# break here because array was sorted
+					# so we already got the highest score possible
+					break
 
 	var sorted_dict := {}
 	for peering_terrain in sorted_peering_terrains:
@@ -479,6 +471,32 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 	_transition_peering_terrains[transition_key] = sorted_dict
 
 	# profiler.stop_timer("_create_transition_scores_list()")
+
+
+
+
+func get_score_peering_terrain(p_peering_terrain : int, p_primary : bool, p_non_matching := false) -> int:
+	var priority_score := _peering_terrain_priorities.find(p_peering_terrain) * PEERING_TERRAIN_PRIORITY_MULTIPLIER
+	var rank_score : int
+	if p_primary:
+		rank_score = ScoreValues[Score.PRIMARY]
+	else:
+		rank_score = ScoreValues[Score.SECONDARY]
+	var non_matching_score := 0
+	if p_non_matching:
+		non_matching_score = ScoreValues[Score.NON_MATCHING_BIT]
+	return rank_score + non_matching_score - priority_score
+
+
+func get_score_alternative_terrain(p_alternative_terrain : int, p_peering_terrain : int, p_primary : bool, p_non_matching := false) -> int:
+	var peering_terrain_score := get_score_peering_terrain(p_peering_terrain, p_primary, p_non_matching)
+	var alt_priority_score := get_score_alternative_adjustment(p_alternative_terrain)
+	return peering_terrain_score - alt_priority_score
+
+
+func get_score_alternative_adjustment(p_alternative_terrain : int) -> int:
+	# add 1 to ensure that it is always lower than peering_terrain_score
+	return 1 + _peering_terrain_priorities.find(p_alternative_terrain) * ALTERNATIVE_TERRAIN_PRIORITY_MULTIPLIER
 
 
 
@@ -497,9 +515,6 @@ func _get_transition_key(p_tile_terrains : Array) -> Array:
 	sorted_terrains.sort()
 	return sorted_terrains
 
-
-func _has_peering_terrain(p_tile_terrain : int, p_peering_terrain : int) -> bool:
-	return _get_peering_terrains(p_tile_terrain).has(p_peering_terrain)
 
 
 # must be regular array (not PackedInt32Array), since we need to sort custom
@@ -521,11 +536,10 @@ func _get_peering_terrain_pattern_count(p_tile_terrain : int, p_peering_terrain 
 # for a terrain set with 188 patterns cached:
 # get_pattern() - 3msec per 1000 calls
 # get_pattern_by_id() - 11msec per 1000 calls
-# (may be partly due to creating IDs, but that part can't be skipped)
-func get_pattern(p_pattern : TerrainPattern, p_constrain_ignore_terrain := false) -> TerrainPattern:
-	if has_ignore_terrain(p_pattern.tile_terrain) && not p_constrain_ignore_terrain:
-		return _get_pattern_with_ignore_terrain(p_pattern)
-
+# (likely due to creating IDs, but that part can't be skipped)
+# only returns exact matches
+# does not look for substitutes for alt terrains
+func get_pattern(p_pattern : TerrainPattern) -> TerrainPattern:
 	var dict : Dictionary = _pattern_lookup.get(p_pattern.tile_terrain, {})
 	if dict.is_empty():
 		return null
@@ -546,30 +560,6 @@ func get_pattern(p_pattern : TerrainPattern, p_constrain_ignore_terrain := false
 
 
 
-# gets pattern with either the set bits or ignore bits
-# if multiple found, returns the one with the fewest ignore bits
-func _get_pattern_with_ignore_terrain(p_pattern) -> TerrainPattern:
-	var search_pattern := SearchPattern.new(self, p_pattern.tile_terrain).create_from_pattern(p_pattern)
-	var patterns := find_patterns(search_pattern)
-	if patterns.is_empty():
-		return null
-	if patterns.size() == 1:
-		return patterns[0]
-
-	var min_ignore_count := 100
-	var min_ignore_pattern : TerrainPattern
-	for pattern in patterns:
-		var ignore_count := 0
-		for bit in pattern.get_peering_bits():
-			if pattern.get_bit_peering_terrain(bit) == ignore_terrain:
-				ignore_count += 1
-		if ignore_count < min_ignore_count:
-			min_ignore_count = ignore_count
-			min_ignore_pattern = pattern
-
-	return min_ignore_pattern
-
-
 func get_patterns_by_terrain(tile_terrain : int) -> Array:
 	return _patterns_by_terrain.get(tile_terrain, [])
 
@@ -584,12 +574,7 @@ func find_patterns(p_search_pattern : SearchPattern) -> Array:
 	if tile_terrain_dict.is_empty():
 		return []
 
-	# setup for ignore terrain use
-	var tile_terrain_has_ignore_terrain := false
-	var all_tile_peering_terrains : PackedInt32Array
-	if ignore_terrain_enabled:
-		tile_terrain_has_ignore_terrain = _tile_peering_terrains_counts[tile_terrain].has(ignore_terrain)
-		all_tile_peering_terrains = PackedInt32Array(_tile_peering_terrains_counts[tile_terrain].keys())
+	var possible_alt_terrains = tile_terrain_alt_terrains.get(tile_terrain, PackedInt32Array())
 
 	# setup bits
 	var bit_count := _ordered_peering_bits.size()
@@ -604,14 +589,24 @@ func find_patterns(p_search_pattern : SearchPattern) -> Array:
 	while current_bit_index <= last_bit_index:
 		var bit : int = _ordered_peering_bits[current_bit_index]
 		var possible_terrains := p_search_pattern.get_all_bit_peering_terrains(bit)
-		if ignore_terrain_enabled:
-			# if a constraint is ignore_terrain, then allow any of tile_terrain's peering terrains
-			if possible_terrains.has(ignore_terrain):
-				possible_terrains = all_tile_peering_terrains
-			# if tile terrain has ignore terrain, then always allow it
-			if tile_terrain_has_ignore_terrain:
-				if not possible_terrains.has(ignore_terrain):
-					possible_terrains.append(ignore_terrain)
+
+		# if an alternative terrain is in the search pattern
+		# append all the alt's peering terrains to possible terrains for the bit
+		for peering_terrain in possible_terrains.duplicate():
+			if alt_terrain_peering_terrains.has(peering_terrain):
+				for alt_peering_terrain in alt_terrain_peering_terrains[peering_terrain]:
+					if possible_terrains.has(alt_peering_terrain):
+						continue
+					possible_terrains.append(alt_peering_terrain)
+
+		# if the tile terrain has an alt terrain that contains
+		# the search pattern's peering terrain,
+		# append the alt terrain to possible terrains for the bit
+		for alt_terrain in possible_alt_terrains:
+			for peering_terrain in possible_terrains.duplicate():
+				if alt_terrain_peering_terrains[alt_terrain].has(peering_terrain):
+					if not possible_terrains.has(alt_terrain):
+						possible_terrains.append(alt_terrain)
 
 		for dict in current_dicts:
 			for peering_terrain in possible_terrains:
@@ -641,13 +636,13 @@ func get_primary_peering_terrain(p_tile_terrain : int) -> int:
 
 
 func has_peering_terrain(p_tile_terrain : int, p_peering_terrain : int) -> bool:
-	return _get_peering_terrain_pattern_count(p_tile_terrain, p_peering_terrain) > 0
-
-
-func has_ignore_terrain(p_tile_terrain : int) -> bool:
-	if not ignore_terrain_enabled:
-		return false
-	return has_peering_terrain(p_tile_terrain, ignore_terrain)
+	if _get_peering_terrain_pattern_count(p_tile_terrain, p_peering_terrain) > 0:
+		return true
+	var alt_terrains : PackedInt32Array = alt_terrain_peering_terrains.get(p_tile_terrain, PackedInt32Array())
+	for alt_terrain in alt_terrain_peering_terrains[p_tile_terrain]:
+		if alt_terrain_peering_terrains[alt_terrain].has(p_peering_terrain):
+			return true
+	return false
 
 
 func can_match_to_empty(p_tile_terrain : int) -> bool:
@@ -669,7 +664,6 @@ func get_debug_text(p_show_transitions : bool) -> String:
 	var text := "Terrain patterns cached: %s" % _patterns_by_id.size()
 	text += "\nTile terrains: %s + EMPTY" % tile_terrains.size()
 	text += "\nPeering terrains: %s" % peering_terrains.size()
-	text += "\n@ignore terrain ID = %s" % [("N/A" if ignore_terrain == NULL_TERRAIN else str(ignore_terrain))]
 	text += "\n"
 
 	var tile_terrain_order := _get_debug_tile_terrain_order()
