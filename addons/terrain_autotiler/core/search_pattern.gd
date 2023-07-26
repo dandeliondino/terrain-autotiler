@@ -126,6 +126,7 @@ func add_neighbor_pattern(p_neighbor_coords : Vector2i, p_pattern : TerrainPatte
 					# flag as a problem, and assign the new peering terrain
 					conflicting_bit_terrains = true
 				set_bit_peering_terrain(bit, neighbor_peering_terrain)
+			continue
 
 		# if pattern's bit is alt terrain
 		if _alt_terrain_peering_terrains.has(neighbor_peering_terrain):

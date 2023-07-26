@@ -248,6 +248,8 @@ func _get_bits_text(terrain : int, bit_dict : Dictionary) -> String:
 				s = "*"
 			else:
 				s = "-"
+		elif peering_terrain == SearchPattern.MULTIPLE_TERRAINS:
+			s = "+"
 		else:
 			s = terrains_data.get_formatted_terrain_string(peering_terrain, true)
 		format_dict[bit] = s
