@@ -475,7 +475,7 @@ func _get_matching_pattern(p_search_pattern : SearchPattern, p_complex : bool) -
 		pattern_type = UpdateResult.PatternType.COMPLEX_BEST_PATTERN
 
 	if top_pattern:
-		pattern = terrains_data.get_pattern(top_pattern, true)
+		pattern = terrains_data.get_pattern(top_pattern)
 		if cell_logging:
 			result.add_cell_log(p_search_pattern.coords, "found top pattern=%s" % [pattern != null])
 		if pattern:

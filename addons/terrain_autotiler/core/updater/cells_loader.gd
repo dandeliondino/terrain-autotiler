@@ -197,7 +197,7 @@ func _add_cells(p_cells : Array, p_cell_type  : CellType) -> void:
 				update = false
 		else:
 			var tile_data_pattern := TerrainPattern.new(peering_bits).create_from_tile_data(tile_data)
-			pattern = terrains_data.get_pattern(tile_data_pattern, true)
+			pattern = terrains_data.get_pattern(tile_data_pattern)
 
 		if p_cell_type == CellType.PAINTED:
 			cells.terrains[coords] = painted_cells[coords]
