@@ -103,8 +103,13 @@ func add_neighbor_pattern(p_neighbor_coords : Vector2i, p_pattern : TerrainPatte
 			continue
 
 		if current_peering_terrain == NULL_TERRAIN:
-			set_bit_peering_terrain(bit, neighbor_peering_terrain)
+			if _alt_terrain_peering_terrains.has(neighbor_peering_terrain):
+				_bit_multiple_terrains[bit] = _alt_terrain_peering_terrains[neighbor_peering_terrain]
+				_bit_peering_terrains[bit] = MULTIPLE_TERRAINS
+			else:
+				set_bit_peering_terrain(bit, neighbor_peering_terrain)
 			continue
+
 
 		# multiple terrains assigned to bit (prior neighbor pattern had alt terrain)
 		if current_peering_terrain == MULTIPLE_TERRAINS:
@@ -122,13 +127,9 @@ func add_neighbor_pattern(p_neighbor_coords : Vector2i, p_pattern : TerrainPatte
 					conflicting_bit_terrains = true
 				set_bit_peering_terrain(bit, neighbor_peering_terrain)
 
-		# if current pattern's bit is alt terrain
+		# if pattern's bit is alt terrain
 		if _alt_terrain_peering_terrains.has(neighbor_peering_terrain):
-			# PackedInt32Arrays are passed by value, so can assign without duplicating
-			if current_peering_terrain == NULL_TERRAIN:
-				_bit_multiple_terrains[bit] = _alt_terrain_peering_terrains[neighbor_peering_terrain]
-				_bit_peering_terrains[bit] = MULTIPLE_TERRAINS
-			elif not _alt_terrain_peering_terrains[neighbor_peering_terrain].has(current_peering_terrain):
+			if not _alt_terrain_peering_terrains[neighbor_peering_terrain].has(current_peering_terrain):
 				# leave it as the current_peering_terrain but flag as problem
 				conflicting_bit_terrains = true
 			# else leave it current peering terrain constraint
