@@ -394,6 +394,10 @@ func _assign_non_matching_patterns() -> void:
 		if not _cell_needs_pattern(coords, false):
 			continue
 
+		var error := _assign_matching_pattern(coords, false)
+		if not error:
+			continue
+
 		if not result.cell_errors.has(coords):
 			result.add_cell_error(coords, UpdateResult.CellError.NO_PATTERN_FOUND)
 
