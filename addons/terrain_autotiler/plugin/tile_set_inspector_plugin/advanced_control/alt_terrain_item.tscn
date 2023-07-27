@@ -1,0 +1,37 @@
+[gd_scene load_steps=3 format=3 uid="uid://jclr4md4uev7"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/alt_terrain_item.gd" id="1_0y25d"]
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/icon_button/icon_button.gd" id="1_ov16g"]
+
+[node name="TerrainItem" type="PanelContainer"]
+script = ExtResource("1_0y25d")
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="HBoxContainer2"]
+custom_minimum_size = Vector2(8, 0)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ColorRect" type="ColorRect" parent="HBoxContainer2/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+
+[node name="Label" type="Label" parent="HBoxContainer2/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "[0] TerrainName"
+
+[node name="RemoveButton" type="Button" parent="HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+flat = true
+script = ExtResource("1_ov16g")
+icon_name = "MissingNode"

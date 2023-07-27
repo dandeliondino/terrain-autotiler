@@ -1,0 +1,93 @@
+[gd_scene load_steps=3 format=3 uid="uid://cwbkmwu8tqab7"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/alternative_item.gd" id="1_cgvi2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_34xb4"]
+
+[node name="AlternativeItem" type="VBoxContainer"]
+script = ExtResource("1_cgvi2")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="AltNamePanel" type="PanelContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_34xb4")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/AltNamePanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Control" type="Control" parent="VBoxContainer/AltNamePanel/HBoxContainer"]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+
+[node name="ColorRect" type="ColorRect" parent="VBoxContainer/AltNamePanel/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+
+[node name="Label" type="Label" parent="VBoxContainer/AltNamePanel/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "@alternative"
+
+[node name="ContentPanel" type="PanelContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/ContentPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ContentPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="MatchAnyCheckBox" type="CheckBox" parent="VBoxContainer/ContentPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Match Any"
+
+[node name="MatchTerrainsCheckBox" type="CheckBox" parent="VBoxContainer/ContentPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Match List"
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/ContentPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 8
+
+[node name="TerrainsListPanel" type="PanelContainer" parent="VBoxContainer/ContentPanel/MarginContainer/VBoxContainer/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/ContentPanel/MarginContainer/VBoxContainer/MarginContainer/TerrainsListPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ContentPanel/MarginContainer/VBoxContainer/MarginContainer/TerrainsListPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="EmptyLabel" type="Label" parent="VBoxContainer/ContentPanel/MarginContainer/VBoxContainer/MarginContainer/TerrainsListPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "No terrains in list."
+
+[node name="TerrainItemsContainer" type="VBoxContainer" parent="VBoxContainer/ContentPanel/MarginContainer/VBoxContainer/MarginContainer/TerrainsListPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="AddTerrainButton" type="MenuButton" parent="VBoxContainer/ContentPanel/MarginContainer/VBoxContainer/MarginContainer/TerrainsListPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add Terrain"
+flat = false

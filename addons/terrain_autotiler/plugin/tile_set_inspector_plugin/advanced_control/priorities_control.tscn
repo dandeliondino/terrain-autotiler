@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://dpsopjq0iubac"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/priorities_control.gd" id="1_dfhvg"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6j7wy"]
+
+[node name="PrioritiesControl" type="VBoxContainer"]
+script = ExtResource("1_dfhvg")
+
+[node name="DefaultButton" type="CheckButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/focus = SubResource("StyleBoxEmpty_6j7wy")
+text = "Use default priorities"
+flat = true
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+
+[node name="TerrainsContainer" type="VBoxContainer" parent="MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
