@@ -331,12 +331,23 @@ func _sort_tile_terrains() -> void:
 	sorted_tile_terrains = tile_terrains.duplicate()
 	sorted_tile_terrains.sort_custom(
 		func(a,b):
-			var a_primary_peering_terrain := get_primary_peering_terrain(a)
-			var b_primary_peering_terrain := get_primary_peering_terrain(b)
-			var a_to_b_count := _get_peering_terrain_pattern_count(a, b_primary_peering_terrain)
-			var b_to_a_count := _get_peering_terrain_pattern_count(b, a_primary_peering_terrain)
-			return a_to_b_count > b_to_a_count
+			var a_alt_terrain_count := _get_alt_terrain_count(a)
+			var b_alt_terrain_count := _get_alt_terrain_count(b)
+			if a_alt_terrain_count == b_alt_terrain_count:
+				var a_primary_peering_terrain := get_primary_peering_terrain(a)
+				var b_primary_peering_terrain := get_primary_peering_terrain(b)
+				var a_to_b_count := _get_peering_terrain_pattern_count(a, b_primary_peering_terrain)
+				var b_to_a_count := _get_peering_terrain_pattern_count(b, a_primary_peering_terrain)
+				return a_to_b_count > b_to_a_count
+			return a_alt_terrain_count > b_alt_terrain_count
 	)
+
+
+func _get_alt_terrain_count(p_tile_terrain : int) -> int:
+	var count := 0
+	for alt_terrain in tile_terrain_alt_terrains.get(p_tile_terrain, PackedInt32Array()):
+		count += _get_peering_terrain_pattern_count(p_tile_terrain, alt_terrain)
+	return count
 
 
 # PATTERN DICT COMPREHENSION
