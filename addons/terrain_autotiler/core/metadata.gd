@@ -107,6 +107,7 @@ static func validate_tile_set_metadata(tile_set : TileSet) -> void:
 			terrain_set_metas[terrain_set] = {}
 		var terrain_set_meta : Dictionary = terrain_set_metas[terrain_set]
 		_validate_match_mode(terrain_set_meta, tile_set)
+		_validate_terrains(terrain_set_meta, tile_set, terrain_set)
 		_validate_primary_peering_terrains(terrain_set_meta, tile_set, terrain_set)
 		_validate_priorities(tile_set, terrain_set)
 		_validate_alternatives(tile_set, terrain_set)
@@ -120,6 +121,13 @@ static func _get_terrain_set_meta(tile_set : TileSet, terrain_set : int) -> Dict
 	if terrain_set_metas.is_empty():
 		return {}
 	return terrain_set_metas.get(terrain_set, {})
+
+
+
+
+# ------------------------------------------------------
+# 	MATCH MODE
+# ------------------------------------------------------
 
 
 static func _validate_match_mode(terrain_set_meta : Dictionary, tile_set : TileSet) -> void:
@@ -137,6 +145,149 @@ static func set_match_mode(tile_set : TileSet, terrain_set : int, match_mode : A
 	terrain_set_meta[META_MATCH_MODE] = match_mode
 	tile_set.changed.emit()
 
+
+# ------------------------------------------------------
+# 	TERRAINS
+# ------------------------------------------------------
+# terrain_set_meta[META_TERRAINS] = {terrain_id : {"index": int, "name" : String}
+
+const META_TERRAINS := "terrains"
+const TERRAIN_INDEX := "terrain_index"
+const TERRAIN_NAME := "terrain_name"
+const INVALID_IDENTIFIER := -99
+
+static func _validate_terrains(
+	terrain_set_meta : Dictionary,
+	tile_set : TileSet,
+	terrain_set : int) -> void:
+
+	if not terrain_set_meta.has(META_TERRAINS):
+		_create_terrains(terrain_set_meta, tile_set, terrain_set)
+		return
+
+	var terrains : Dictionary = terrain_set_meta[META_TERRAINS]
+	var indexes_to_validate := []
+	var ids_to_validate := terrains.keys()
+
+	# validate all terrains with unchanged index-name pairs
+	for terrain_index in tile_set.get_terrains_count(terrain_set):
+		var validated := false
+		var terrain_name := tile_set.get_terrain_name(terrain_set, terrain_index)
+		for next_terrain_id in ids_to_validate.duplicate():
+			var next_terrain_dict : Dictionary = terrains.get(next_terrain_id, {})
+			if next_terrain_dict.is_empty():
+				continue
+			var next_terrain_name : String = next_terrain_dict.get(TERRAIN_NAME, "")
+			var next_terrain_index : int = next_terrain_dict.get(TERRAIN_INDEX, INVALID_IDENTIFIER)
+			if terrain_index == next_terrain_index && terrain_name == next_terrain_name:
+				ids_to_validate.erase(next_terrain_id)
+				validated = true
+				print("found terrain: %s - %s" % [terrain_index, terrain_name])
+				break
+
+		if not validated:
+			indexes_to_validate.append(terrain_index)
+
+	# Re-link index-names when one has changed.
+	# To avoid errors if there are duplicate names,
+	# limit search scope to unvalidated terrain ids only.
+
+	# First, update terrains with the same name but different index
+	for terrain_index in indexes_to_validate.duplicate():
+		var terrain_name := tile_set.get_terrain_name(terrain_set, terrain_index)
+		for next_terrain_id in ids_to_validate.duplicate():
+			var next_terrain_dict : Dictionary = terrains.get(next_terrain_id, {})
+			if next_terrain_dict.is_empty():
+				continue
+			var next_terrain_name : String = next_terrain_dict.get(TERRAIN_NAME, "")
+			if next_terrain_name == terrain_name:
+				# if the name matches, replace the index with the current one
+				print("Terrain Autotiler: Detected index change for '%s' terrain: new index = %s" % [terrain_name, terrain_index])
+				next_terrain_dict[TERRAIN_INDEX] = terrain_index
+				ids_to_validate.erase(next_terrain_id)
+				indexes_to_validate.erase(terrain_index)
+				break
+
+
+	# Then update terrains with different names but the same index
+	for terrain_index in indexes_to_validate.duplicate():
+		var found := false
+		var terrain_name := tile_set.get_terrain_name(terrain_set, terrain_index)
+		for next_terrain_id in ids_to_validate.duplicate():
+			var next_terrain_dict : Dictionary = terrains.get(next_terrain_id, {})
+			if next_terrain_dict.is_empty():
+				continue
+			var next_terrain_index : int = next_terrain_dict.get(TERRAIN_INDEX, INVALID_IDENTIFIER)
+			if next_terrain_index == terrain_index:
+				# if the index matches, replace the name with the current one
+				print("Terrain Autotiler: Detected name change for terrain %s: new name = %s" % [terrain_index, terrain_name])
+				next_terrain_dict[TERRAIN_NAME] = terrain_name
+				ids_to_validate.erase(next_terrain_id)
+				indexes_to_validate.erase(terrain_index)
+				break
+
+	# Remove data for unused terrain ids
+	for terrain_id in ids_to_validate:
+		print("Terrain Autotiler: Detected deleted terrain")
+		terrains.erase(terrain_id)
+
+	# Add new entries for missing terrain index-name pairs
+	for terrain_index in indexes_to_validate:
+		print("Terrain Autotiler: Detected new terrain")
+		var terrain_name := tile_set.get_terrain_name(terrain_set, terrain_index)
+		var terrain_id := 0
+		while terrains.has(terrain_id):
+			terrain_id += 1
+		terrains[terrain_id] = {
+			TERRAIN_INDEX: terrain_index,
+			TERRAIN_NAME: terrain_name,
+		}
+
+
+
+static func _terrain_index_to_id(terrain_set_meta : Dictionary, p_index : int) -> int:
+	var terrains : Dictionary = terrain_set_meta[META_TERRAINS]
+	for terrain_id in terrains:
+		var terrain_index : int = terrains[terrain_id].get(TERRAIN_INDEX, INVALID_IDENTIFIER)
+		if terrain_index == INVALID_IDENTIFIER:
+			continue
+		if terrain_index == p_index:
+			return terrain_id
+	return INVALID_IDENTIFIER
+
+
+static func _terrain_id_to_index(terrain_set_meta : Dictionary, p_id : int) -> int:
+	var terrains : Dictionary = terrain_set_meta[META_TERRAINS]
+	var terrain_dict : Dictionary = terrains.get(p_id, {})
+	if terrain_dict.is_empty():
+		return INVALID_IDENTIFIER
+	return terrain_dict.get(TERRAIN_INDEX, INVALID_IDENTIFIER)
+
+
+
+static func _create_terrains(
+	terrain_set_meta : Dictionary,
+	tile_set : TileSet,
+	terrain_set : int) -> void:
+
+	var terrains := {}
+
+	# use index as id when first setting up
+	for terrain_index in tile_set.get_terrains_count(terrain_set):
+		var terrain_id : int = terrain_index
+		terrains[terrain_id] = {
+			TERRAIN_INDEX : terrain_index,
+			TERRAIN_NAME : tile_set.get_terrain_name(terrain_set, terrain_index)
+		}
+
+	terrain_set_meta[META_TERRAINS] = terrains
+
+
+
+
+# ------------------------------------------------------
+# 	PRIMARY PEERING TERRAINS
+# ------------------------------------------------------
 
 
 static func _validate_primary_peering_terrains(terrain_set_meta : Dictionary, tile_set : TileSet, terrain_set : int) -> void:
