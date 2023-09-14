@@ -1,0 +1,67 @@
+[gd_scene load_steps=6 format=3 uid="uid://cfhyrvredogit"]
+
+[ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/advanced_control.gd" id="1_2huq0"]
+[ext_resource type="PackedScene" uid="uid://dkmdolef567ab" path="res://addons/terrain_autotiler/plugin/section_button/section_button.tscn" id="2_a4tts"]
+[ext_resource type="PackedScene" uid="uid://2l7t03t7hh8b" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/primary_peering_terrains_control.tscn" id="2_iuo7u"]
+[ext_resource type="PackedScene" uid="uid://dpsopjq0iubac" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/priorities_control.tscn" id="4_hm2i6"]
+[ext_resource type="PackedScene" uid="uid://ccjcgxf8e41ws" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/alternatives_control.tscn" id="5_m70m3"]
+
+[node name="AdvancedControl" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+script = ExtResource("1_2huq0")
+
+[node name="SectionButton" parent="." instance=ExtResource("2_a4tts")]
+layout_mode = 2
+label_text = "Advanced"
+expand_container_path = NodePath("../MarginContainer")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="SectionButton" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_a4tts")]
+layout_mode = 2
+label_text = "Primary Peering Terrains"
+expand_container_path = NodePath("../PrimaryContainer")
+
+[node name="PrimaryContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+
+[node name="PrimaryPeeringTerrainsControl" parent="MarginContainer/VBoxContainer/PrimaryContainer" instance=ExtResource("2_iuo7u")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="SectionButton2" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_a4tts")]
+layout_mode = 2
+label_text = "Transition Priorities"
+expand_container_path = NodePath("../PrioritiesContainer")
+
+[node name="PrioritiesContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+
+[node name="PrioritiesControl" parent="MarginContainer/VBoxContainer/PrioritiesContainer" instance=ExtResource("4_hm2i6")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="SectionButton3" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_a4tts")]
+layout_mode = 2
+label_text = "Alternatives"
+expand_container_path = NodePath("../AlternativesContainer")
+
+[node name="AlternativesContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+
+[node name="AlternativesControl" parent="MarginContainer/VBoxContainer/AlternativesContainer" instance=ExtResource("5_m70m3")]
+unique_name_in_owner = true
+layout_mode = 2

@@ -38,5 +38,5 @@ func _update_visibility() -> void:
 func _on_button_pressed() -> void:
 	tile_set.add_terrain(terrain_set)
 	var idx := tile_set.get_terrains_count(terrain_set) - 1
-	tile_set.set_terrain_name(terrain_set, idx, Autotiler._IGNORE_TERRAIN_NAME)
+	tile_set.set_terrain_name(terrain_set, idx, "@alt")
 	tile_set.set_terrain_color(terrain_set, idx, Color.LIGHT_SKY_BLUE)

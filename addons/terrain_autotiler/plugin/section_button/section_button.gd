@@ -1,6 +1,7 @@
 @tool
 extends Button
 
+signal expand_state_changed(value)
 
 const LABEL_MARGIN_ADJUST := -6
 
@@ -64,7 +65,9 @@ func setup() -> void:
 	label.set("theme_override_colors/font_focus_color", get_theme_color("font_color", "Editor"))
 	label.set("theme_override_colors/font_hover_pressed_color", get_theme_color("font_color", "Editor"))
 
+
 #	custom_minimum_size.y = size.y + 4
+
 
 
 
@@ -81,6 +84,7 @@ func _toggle_expanded(value : bool) -> void:
 		if is_instance_valid(expand_container):
 			expand_container.hide()
 		arrow_rect.texture = icon_collapsed
+	expand_state_changed.emit(value)
 
 
 func _toggle_hover(value : bool) -> void:

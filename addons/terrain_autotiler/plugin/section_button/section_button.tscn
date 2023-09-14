@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://dkmdolef567aa"]
+[gd_scene load_steps=7 format=3 uid="uid://dkmdolef567ab"]
 
 [ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/section_button/section_button.gd" id="1_nbqv8"]
 
@@ -12,7 +12,7 @@
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bxs77"]
 
-[node name="SectionButton" type="Button" groups=["TBTSectionButton"]]
+[node name="SectionButton" type="Button" groups=["ta_section_button"]]
 anchors_preset = 10
 anchor_right = 1.0
 grow_horizontal = 2
@@ -24,6 +24,7 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_bxs77")
 toggle_mode = true
 flat = true
 script = ExtResource("1_nbqv8")
+label_text = "Section Button"
 
 [node name="BackgroundRect" type="ColorRect" parent="."]
 unique_name_in_owner = true
@@ -58,10 +59,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Label" type="Label" parent="LabelMarginContainer" groups=["TBTSectionLabel"]]
+[node name="Label" type="Label" parent="LabelMarginContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Inspector Section"
+text = "Section Button"
 
 [connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]

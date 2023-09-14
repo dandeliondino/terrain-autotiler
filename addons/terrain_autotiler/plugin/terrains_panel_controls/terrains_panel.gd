@@ -106,7 +106,7 @@ func update_panel_display() -> void:
 
 
 func _on_terrain_change_requested(p_terrain_set : int, p_terrain : int) -> void:
-	# if empty terrain, will ignore the terrain set provided
+	# if empty terrain, will skip the terrain set provided
 	# and select the empty terrain currently available
 	if p_terrain == Autotiler.EMPTY_TERRAIN or p_terrain_set == context.get_current_terrain_set():
 		# set current terrain only

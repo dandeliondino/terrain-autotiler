@@ -216,19 +216,23 @@ func get_cell_log_texts(coords : Vector2i) -> Array:
 
 
 func _get_search_pattern_text(pattern : SearchPattern) -> String:
-	var s := "\nSearch pattern created:"
+	var s := "\nCurrent search pattern:"
 	s += _get_bits_text(pattern.tile_terrain, pattern.get_bit_peering_terrains_dict())
 	for bit in pattern.get_peering_bits():
-		if pattern.get_bit_peering_terrain(bit) != Autotiler.NULL_TERRAIN:
-			continue
-		var peering_bit_scores := pattern.get_bit_scores(bit)
-		if peering_bit_scores.is_empty():
-			continue
-		s += "\n\t%s:" % CellNeighbors.get_text(bit)
-		for peering_terrain in peering_bit_scores:
-			var score : int = peering_bit_scores[peering_terrain]
-			s += "\n\t\t%s - %s" % [terrains_data.get_formatted_terrain_string(peering_terrain, true), score]
-
+		var value := pattern.get_bit_peering_terrain(bit)
+		if value == SearchPattern.MULTIPLE_TERRAINS:
+			s += "\n\t%s alt terrains:" % CellNeighbors.get_text(bit)
+			var multiple_terrains : PackedInt32Array = pattern._bit_multiple_terrains[bit]
+			for peering_terrain in multiple_terrains:
+				s += "\n\t\t%s" % [terrains_data.get_formatted_terrain_string(peering_terrain, true)]
+		elif value == Autotiler.NULL_TERRAIN:
+			var peering_bit_scores := pattern.get_bit_scores(bit)
+			if peering_bit_scores.is_empty():
+				continue
+			s += "\n\t%s:" % CellNeighbors.get_text(bit)
+			for peering_terrain in peering_bit_scores:
+				var score : int = peering_bit_scores[peering_terrain]
+				s += "\n\t\t%s - %s" % [terrains_data.get_formatted_terrain_string(peering_terrain, true), score]
 	return s
 
 
@@ -248,6 +252,8 @@ func _get_bits_text(terrain : int, bit_dict : Dictionary) -> String:
 				s = "*"
 			else:
 				s = "-"
+		elif peering_terrain == SearchPattern.MULTIPLE_TERRAINS:
+			s = "+"
 		else:
 			s = terrains_data.get_formatted_terrain_string(peering_terrain, true)
 		format_dict[bit] = s

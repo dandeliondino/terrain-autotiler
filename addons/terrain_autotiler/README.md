@@ -14,11 +14,11 @@ Terrain Autotiler is a replacement terrain tile matching algorithm for Godot 4. 
 
 ### Features
 #### Core
-- A more accurate and deterministic terrain tile matching algorithm. It fixes [multiple open issues](https://github.com/dandeliondino/terrain-autotiler/wiki/Godot-4-Issues-and-Proposals). (And it is also [faster](https://github.com/dandeliondino/terrain-autotiler/wiki/Performance-vs-Engine).)
+- A more accurate and deterministic terrain tile matching algorithm. It fixes [multiple open issues](https://github.com/dandeliondino/terrain-autotiler/wiki/Godot-4-Issues-and-Proposals). (While it is not *fast*, it is usually a bit [faster than the engine](https://github.com/dandeliondino/terrain-autotiler/wiki/Performance-vs-Engine).)
 - Fully compatible with the Godot 4 terrains system. No additional setup is required.
 - Brings back compatible Godot 3 features:
     - [Corners and Sides "Full" 256-tile mode](https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features#corners-and-sides-match-modes) to match individual diagonal connections.
-    - [@ignore terrain bits](https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features#ignore-terrain) to allow users to reuse tiles and transitions with a more flexible interface than alternative tiles.
+    - [Alternative terrains](https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features#alternative-terrains) can function as ignore bits similar to Godot 3.x by matching any other terrain, or can match a specific list of terrains.
     - [Custom primary peering terrains](https://github.com/dandeliondino/terrain-autotiler/wiki/Additional-Features#primary-peering-terrains) to allow merging tiles of different terrains.
     - Ability to recalculate and update all terrain tiles in a TileMap layer.
 
@@ -34,7 +34,7 @@ Terrain Autotiler is a replacement terrain tile matching algorithm for Godot 4. 
     - Lock individual cells to prevent tiles from being updated (useful for preserving Path mode painting).
     - Error notifications appear in real-time while painting to assist in identifying issues such as missing tiles.
     - Open the debug panel to view detailed data for troubleshooting and bug reports.
-    - *Note: The editor plugin is a work in progress. Notably, as of v0.2.0, it is missing the option to paint specific individual tiles as well as non-contiguous mode for bucket fill. Toggle off the Terrain Autotiler tools to access these base Godot 4 editor features instead.*
+    - *Note: The editor plugin is a work in progress. Notably, it is missing the option to paint specific individual tiles as well as non-contiguous mode for bucket fill. Toggle off the Terrain Autotiler tools to access these base Godot 4 editor features instead.*
 - TileSet inspector: Set up advanced features such as "Full" Corners and Sides matching mode, @ignore terrains and custom primary peering terrains.
 - Includes minor editor bug fixes and UX improvements
     - Selecting a TileMap in the scene tree always opens the bottom TileMap editor (rather than sometimes opening the TileSet editor instead)
