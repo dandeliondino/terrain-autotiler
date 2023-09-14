@@ -176,7 +176,7 @@ func _load_terrains() -> void:
 		terrain_names[terrain] = terrain_name
 
 		if terrain_name.begins_with("@"):
-			alt_terrain_peering_terrains[terrain] = Metadata.get_alternative_match_terrains(tile_set, terrain_set, terrain_name)
+			alt_terrain_peering_terrains[terrain] = Metadata.get_alternative_match_terrains(tile_set, terrain_set, terrain)
 			continue
 
 		_primary_peering_terrains[terrain] = Metadata.get_primary_peering_terrain(tile_set, terrain_set, terrain)

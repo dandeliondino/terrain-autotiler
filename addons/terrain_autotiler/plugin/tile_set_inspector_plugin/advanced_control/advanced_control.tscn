@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://cfhyrvredogit"]
 
 [ext_resource type="Script" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/advanced_control.gd" id="1_2huq0"]
-[ext_resource type="PackedScene" uid="" path="res://addons/terrain_autotiler/plugin/section_button/section_button.tscn" id="2_a4tts"]
+[ext_resource type="PackedScene" uid="uid://dkmdolef567aa" path="res://addons/terrain_autotiler/plugin/section_button/section_button.tscn" id="2_a4tts"]
 [ext_resource type="PackedScene" uid="uid://2l7t03t7hh8b" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/primary_peering_terrains_control.tscn" id="2_iuo7u"]
 [ext_resource type="PackedScene" uid="uid://dpsopjq0iubac" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/priorities_control.tscn" id="4_hm2i6"]
 [ext_resource type="PackedScene" uid="uid://ccjcgxf8e41ws" path="res://addons/terrain_autotiler/plugin/tile_set_inspector_plugin/advanced_control/alternatives_control.tscn" id="5_m70m3"]
