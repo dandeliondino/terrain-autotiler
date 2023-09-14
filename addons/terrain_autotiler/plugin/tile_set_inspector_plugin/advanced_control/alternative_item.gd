@@ -10,7 +10,7 @@ const AltTerrainItemScene := preload("res://addons/terrain_autotiler/plugin/tile
 
 var tile_set : TileSet
 var terrain_set : int
-var terrain : int
+var alt_terrain_idx : int
 var alt_name : String
 var match_any : bool
 
@@ -30,15 +30,15 @@ var match_any : bool
 func setup(p_tile_set : TileSet, p_terrain_set : int, p_terrain : int) -> void:
 	tile_set = p_tile_set
 	terrain_set = p_terrain_set
-	terrain = p_terrain
+	alt_terrain_idx = p_terrain
 
-	alt_name = tile_set.get_terrain_name(terrain_set, terrain)
-	var color := tile_set.get_terrain_color(terrain_set, terrain)
+	alt_name = tile_set.get_terrain_name(terrain_set, alt_terrain_idx)
+	var color := tile_set.get_terrain_color(terrain_set, alt_terrain_idx)
 
 	color_rect.color = color
 	label.text = alt_name
 
-	match_any = Metadata.get_alternative_match_all(tile_set, terrain_set, terrain)
+	match_any = Metadata.get_alternative_match_all(tile_set, terrain_set, alt_terrain_idx)
 
 	match_any_check_box.set_pressed_no_signal(match_any)
 	match_terrains_check_box.set_pressed_no_signal(not match_any)
@@ -75,9 +75,9 @@ func populate_terrain_items() -> void:
 	if match_any:
 		return
 
-	var match_terrains := Metadata.get_alternative_match_terrains(tile_set, terrain_set, terrain)
+	var match_terrains := Metadata.get_alternative_match_terrains(tile_set, terrain_set, alt_terrain_idx)
 	if not match_terrains.size():
-		empty_label.show()
+		empty_label.hide() # prefer not using label
 		return
 
 	empty_label.hide()
@@ -95,7 +95,7 @@ func populate_terrain_items() -> void:
 func populate_add_terrain_popup() -> void:
 	add_terrain_popup.clear()
 
-	var terrains_to_add := Metadata.get_alternative_match_terrains_can_add(tile_set, terrain_set, terrain)
+	var terrains_to_add := Metadata.get_alternative_match_terrains_can_add(tile_set, terrain_set, alt_terrain_idx)
 	if terrains_to_add.size() == 0:
 		add_terrain_popup.add_item("<none>")
 		return
@@ -139,19 +139,19 @@ func _get_icon(color : Color) -> ImageTexture:
 func _on_add_terrain_popup_id_pressed(p_terrain : int) -> void:
 	if p_terrain == EMPTY_ID:
 		p_terrain = Autotiler.EMPTY_TERRAIN
-	Metadata.add_alternative_match_terrain(tile_set, terrain_set, terrain, p_terrain)
+	Metadata.add_alternative_match_terrain(tile_set, terrain_set, alt_terrain_idx, p_terrain)
 
 
 func _on_remove_button_pressed(p_terrain : int) -> void:
-	Metadata.remove_alternative_match_terrain(tile_set, terrain_set, terrain, p_terrain)
+	Metadata.remove_alternative_match_terrain(tile_set, terrain_set, alt_terrain_idx, p_terrain)
 
 
 
 func _on_match_any_toggled(value : bool) -> void:
-	Metadata.set_alternative_match_all(tile_set, terrain_set, terrain, value)
+	Metadata.set_alternative_match_all(tile_set, terrain_set, alt_terrain_idx, value)
 
 
 func _on_match_terrains_toggled(value : bool) -> void:
-	Metadata.set_alternative_match_all(tile_set, terrain_set, terrain, not value)
+	Metadata.set_alternative_match_all(tile_set, terrain_set, alt_terrain_idx, not value)
 
 
