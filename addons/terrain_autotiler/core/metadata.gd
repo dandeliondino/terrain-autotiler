@@ -186,7 +186,7 @@ static func _validate_terrains(
 			if terrain_index == next_terrain_index && terrain_name == next_terrain_name:
 				ids_to_validate.erase(next_terrain_id)
 				validated = true
-				print("found terrain: %s - %s" % [terrain_index, terrain_name])
+#				print("found terrain: %s - %s" % [terrain_index, terrain_name])
 				break
 
 		if not validated:
@@ -448,13 +448,15 @@ static func get_primary_peering_terrains(tile_set : TileSet, terrain_set : int) 
 	var terrain_set_meta := _get_terrain_set_meta(tile_set, terrain_set)
 	_validate_primary_peering_terrains(terrain_set_meta, tile_set, terrain_set)
 	var primary_peering_terrains : Dictionary = terrain_set_meta[META_PRIMARY_PEERING_TERRAINS]
+	var sorted_tile_terrains := primary_peering_terrains.keys()
+	sorted_tile_terrains.sort_custom(func(a,b): return _terrain_id_to_index(terrain_set_meta, a) < _terrain_id_to_index(terrain_set_meta, b))
 
 	var primary_peering_terrains_by_index := {}
-	for tile_terrain_id in primary_peering_terrains:
+	for tile_terrain_id in sorted_tile_terrains:
 		var tile_terrain_index := _terrain_id_to_index(terrain_set_meta, tile_terrain_id)
 		var peering_terrain_id : int = primary_peering_terrains.get(tile_terrain_id, INVALID_IDENTIFIER)
 		var peering_terrain_index := _terrain_id_to_index(terrain_set_meta, peering_terrain_id)
-		primary_peering_terrains_by_index[peering_terrain_index] = peering_terrain_index
+		primary_peering_terrains_by_index[tile_terrain_index] = peering_terrain_index
 
 	return primary_peering_terrains_by_index
 
