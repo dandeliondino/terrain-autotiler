@@ -752,7 +752,7 @@ static func get_alternatives_list(tile_set : TileSet, terrain_set : int) -> Pack
 	var alternative_indexes := PackedInt32Array()
 	for terrain_id in alternative_ids:
 		var terrain_index := _terrain_id_to_index(terrain_set_meta, terrain_id)
-		alternative_indexes.append(terrain_id)
+		alternative_indexes.append(terrain_index)
 
 	return alternative_indexes
 
