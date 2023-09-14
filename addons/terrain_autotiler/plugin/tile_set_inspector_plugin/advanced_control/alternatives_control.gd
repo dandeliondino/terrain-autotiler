@@ -23,19 +23,18 @@ func update() -> void:
 		child.queue_free()
 
 	var alternatives_list := Metadata.get_alternatives_list(tile_set, terrain_set)
-	for alt_name in alternatives_list:
-		var terrain := get_terrain_from_name(alt_name)
+	for terrain in alternatives_list:
 		if terrain == Autotiler.NULL_TERRAIN:
 			continue
 		var alternative_item : AlternativeItem = AlternativeItemScene.instantiate()
 		alternatives_container.add_child(alternative_item)
-		alternative_item.setup(tile_set, terrain_set, terrain, alt_name)
+		alternative_item.setup(tile_set, terrain_set, terrain)
 
 
 
 
-func get_terrain_from_name(p_terrain_name) -> int:
-	for terrain in tile_set.get_terrains_count(terrain_set):
-		if tile_set.get_terrain_name(terrain_set, terrain) == p_terrain_name:
-			return terrain
-	return Autotiler.NULL_TERRAIN
+#func get_terrain_from_name(p_terrain_name) -> int:
+#	for terrain in tile_set.get_terrains_count(terrain_set):
+#		if tile_set.get_terrain_name(terrain_set, terrain) == p_terrain_name:
+#			return terrain
+#	return Autotiler.NULL_TERRAIN
