@@ -687,7 +687,7 @@ static func _validate_alternatives(terrain_set_meta : Dictionary, tile_set : Til
 				alternatives[id_from_name] = dict
 				alternatives.erase(terrain_id)
 
-		if not terrain_set_alternatives.has(terrain_id):
+		elif not terrain_set_alternatives.has(terrain_id):
 			print("Terrain Autotiler: Detected alternative terrain removed")
 			alternatives.erase(terrain_id)
 
@@ -720,7 +720,11 @@ static func _validate_alternatives(terrain_set_meta : Dictionary, tile_set : Til
 
 		# remove invalid terrains
 		for match_terrain_id in match_terrains_set.keys():
-			if not _is_terrain_id_valid(terrain_set_meta, match_terrain_id, false):
+			if not _is_terrain_id_valid(terrain_set_meta, match_terrain_id, true):
+				print("invalid terrain id found in alternative match list")
+				match_terrains_set.erase(match_terrain_id)
+			if _is_terrain_id_alternative(terrain_set_meta, match_terrain_id):
+				print("alternative ID found in alternative match list")
 				match_terrains_set.erase(match_terrain_id)
 
 		# sort
