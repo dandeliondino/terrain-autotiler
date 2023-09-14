@@ -260,8 +260,8 @@ func get_match_score(p_pattern : TerrainPattern, p_allow_non_matching : bool) ->
 					# in this case, we are simulating a non-match to empty
 					# so the bit peering terrain score will not be accurate
 					pass
-				else:
-					assert(bit_peering_terrain_score == matching_score)
+				# else:
+#					assert(bit_peering_terrain_score == matching_score)
 
 		var bit_score := INVALID_SCORE
 
@@ -280,7 +280,7 @@ func get_match_score(p_pattern : TerrainPattern, p_allow_non_matching : bool) ->
 						break
 
 			if bit_score == INVALID_SCORE:
-				assert(p_allow_non_matching)
+#				assert(p_allow_non_matching)
 				if not p_allow_non_matching:
 					# something went wrong
 					return INVALID_SCORE
@@ -347,7 +347,7 @@ func get_match_score(p_pattern : TerrainPattern, p_allow_non_matching : bool) ->
 
 			# if no score was listed (non-matching)
 			if bit_score == INVALID_SCORE:
-				assert(p_allow_non_matching)
+#				assert(p_allow_non_matching)
 				if not p_allow_non_matching:
 					return INVALID_SCORE
 
@@ -369,7 +369,7 @@ func get_match_score(p_pattern : TerrainPattern, p_allow_non_matching : bool) ->
 		if pattern_possible_terrains.has(search_peering_terrain):
 			var terrain_score := get_bit_peering_terrain_score(bit, search_peering_terrain)
 			if terrain_score == INVALID_SCORE:
-				assert(p_allow_non_matching)
+#				assert(p_allow_non_matching)
 				if not p_allow_non_matching:
 					return INVALID_SCORE
 				var terrain_is_primary := primary_peering_terrains.has(search_peering_terrain)

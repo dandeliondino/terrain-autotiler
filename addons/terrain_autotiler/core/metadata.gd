@@ -206,7 +206,7 @@ static func _validate_terrains(
 			var next_terrain_name : String = next_terrain_dict.get(TERRAIN_NAME, "")
 			if next_terrain_name == terrain_name:
 				# if the name matches, replace the index with the current one
-				print("Terrain Autotiler: Detected index change for '%s' terrain: new index = %s" % [terrain_name, terrain_index])
+#				print("Terrain Autotiler: Detected index change for '%s' terrain: new index = %s" % [terrain_name, terrain_index])
 				next_terrain_dict[TERRAIN_INDEX] = terrain_index
 				ids_to_validate.erase(next_terrain_id)
 				indexes_to_validate.erase(terrain_index)
@@ -224,7 +224,7 @@ static func _validate_terrains(
 			var next_terrain_index : int = next_terrain_dict.get(TERRAIN_INDEX, INVALID_IDENTIFIER)
 			if next_terrain_index == terrain_index:
 				# if the index matches, replace the name with the current one
-				print("Terrain Autotiler: Detected name change for terrain %s: new name = %s" % [terrain_index, terrain_name])
+#				print("Terrain Autotiler: Detected name change for terrain %s: new name = %s" % [terrain_index, terrain_name])
 				next_terrain_dict[TERRAIN_NAME] = terrain_name
 				ids_to_validate.erase(next_terrain_id)
 				indexes_to_validate.erase(terrain_index)
@@ -232,12 +232,12 @@ static func _validate_terrains(
 
 	# Remove data for unused terrain ids
 	for terrain_id in ids_to_validate:
-		print("Terrain Autotiler: Detected deleted terrain")
+#		print("Terrain Autotiler: Detected deleted terrain")
 		terrains.erase(terrain_id)
 
 	# Add new entries for missing terrain index-name pairs
 	for terrain_index in indexes_to_validate:
-		print("Terrain Autotiler: Detected new terrain")
+#		print("Terrain Autotiler: Detected new terrain")
 		var terrain_name := tile_set.get_terrain_name(terrain_set, terrain_index)
 		var terrain_id := 0
 		while terrains.has(terrain_id):
@@ -679,16 +679,16 @@ static func _validate_alternatives(terrain_set_meta : Dictionary, tile_set : Til
 			var id_from_name := _terrain_name_to_id(terrain_set_meta, terrain_id)
 			if id_from_name == INVALID_IDENTIFIER:
 				# if name isn't found, erase the entry
-				print("Terrain Autotiler: Unable to convert alternative terrain %s" % terrain_id)
+#				print("Terrain Autotiler: Unable to convert alternative terrain %s" % terrain_id)
 				alternatives.erase(terrain_id)
 			else:
-				print("Terrain Autotiler: Converting alternative terrain meta for %s" % terrain_id)
+#				print("Terrain Autotiler: Converting alternative terrain meta for %s" % terrain_id)
 				var dict : Dictionary = alternatives.get(terrain_id, {})
 				alternatives[id_from_name] = dict
 				alternatives.erase(terrain_id)
 
 		elif not terrain_set_alternatives.has(terrain_id):
-			print("Terrain Autotiler: Detected alternative terrain removed")
+#			print("Terrain Autotiler: Detected alternative terrain removed")
 			alternatives.erase(terrain_id)
 
 	# add alternatives not in list
@@ -721,10 +721,10 @@ static func _validate_alternatives(terrain_set_meta : Dictionary, tile_set : Til
 		# remove invalid terrains
 		for match_terrain_id in match_terrains_set.keys():
 			if not _is_terrain_id_valid(terrain_set_meta, match_terrain_id, true):
-				print("invalid terrain id found in alternative match list")
+#				print("invalid terrain id found in alternative match list")
 				match_terrains_set.erase(match_terrain_id)
 			if _is_terrain_id_alternative(terrain_set_meta, match_terrain_id):
-				print("alternative ID found in alternative match list")
+#				print("alternative ID found in alternative match list")
 				match_terrains_set.erase(match_terrain_id)
 
 		# sort

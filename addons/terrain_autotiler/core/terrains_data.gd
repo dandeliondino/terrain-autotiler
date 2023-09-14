@@ -491,9 +491,9 @@ func _create_transition_scores_list(p_tile_terrains : Array) -> void:
 			if not has_peering_terrain(tile_terrain, EMPTY_TERRAIN):
 				match_to_empty = false
 				break
-		if match_to_empty:
-			assert(peering_terrain_scores.has(EMPTY_TERRAIN))
-			assert(peering_terrain_scores[EMPTY_TERRAIN] == get_score_peering_terrain(EMPTY_TERRAIN, true))
+		# if match_to_empty:
+		# 	assert(peering_terrain_scores.has(EMPTY_TERRAIN))
+		# 	assert(peering_terrain_scores[EMPTY_TERRAIN] == get_score_peering_terrain(EMPTY_TERRAIN, true))
 
 	# profiler.stop_timer("_create_transition_scores_list()")
 
